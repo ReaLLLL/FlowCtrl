@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	   http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="threadPoolExecutorForProcess" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="corePoolSize" value="6" />
+        <property name="maxPoolSize" value="6" />
+        <property name="queueCapacity" value="100" />
+        <property name="keepAliveSeconds" value="600" />
+        <property name="rejectedExecutionHandler">
+            <bean class="java.util.concurrent.ThreadPoolExecutor$DiscardPolicy" />
+        </property>
+    </bean>
+
+    <bean id = "mainProcess" class="com.u51.a_little_more.processor.MainProcess">
+        <property name="threadPoolForProcess" ref="threadPoolExecutorForProcess"/>
+        <property name="requestTotalNum" value="${totalNum}"/>
+    </bean>
+
+
+</beans>

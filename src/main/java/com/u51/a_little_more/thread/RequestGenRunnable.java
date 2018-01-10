@@ -1,8 +1,6 @@
 package com.u51.a_little_more.thread;
 
-import org.springframework.beans.factory.annotation.Value;
-
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * <p>注释</p>
@@ -12,11 +10,11 @@ import java.util.concurrent.BlockingDeque;
  */
 public class RequestGenRunnable implements Runnable{
 
-    private BlockingDeque<String> queue;
+    private BlockingQueue<String> queue;
 
     private int num;
 
-    public RequestGenRunnable(BlockingDeque<String> queue, int num) {
+    public RequestGenRunnable(BlockingQueue<String> queue, int num) {
         this.queue = queue;
         this.num = num;
     }
@@ -24,8 +22,8 @@ public class RequestGenRunnable implements Runnable{
     @Override
     public void run() {
         for(int i = 1; i < this.num+1; i++){
-            this.queue.push(String.valueOf(i));
             try {
+                this.queue.put(String.valueOf(i));
                 Thread.sleep(10);
             } catch (InterruptedException e) {
                 e.printStackTrace();

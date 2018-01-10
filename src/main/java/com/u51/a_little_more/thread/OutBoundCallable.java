@@ -1,6 +1,7 @@
 package com.u51.a_little_more.thread;
 
 import com.u51.a_little_more.dataObject.OutBoundResult;
+import com.u51.a_little_more.dataObject.OutBoundStateEnum;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -26,8 +27,13 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
     @Override
     public OutBoundResult call() throws Exception {
         OutBoundResult result = new OutBoundResult();
-        HttpResponse response = this.client.execute(new HttpGet(this.url));
+        //HttpResponse response = this.client.execute(new HttpGet(this.url));
         //TODO 解析response信息
+
+        System.out.println(this.url);
+        result.setState(OutBoundStateEnum.SUCCESS);
+        result.setChannel(1);
+        result.setTime(1000);
         return result;
     }
 }
