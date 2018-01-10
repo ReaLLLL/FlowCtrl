@@ -5,8 +5,6 @@ import com.u51.a_little_more.dataObject.OutBoundResult;
 import com.u51.a_little_more.dataObject.OutBoundStateEnum;
 import com.u51.a_little_more.util.HttpUtil;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.utils.HttpClientUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import java.util.List;
@@ -22,13 +20,13 @@ import java.util.concurrent.TimeUnit;
 public class RequestSendRunnable implements Runnable {
     private BlockingDeque<String> queue;
 
-    private List<RateLimiter> limiterList;
+    private RateLimiter[] limiterList;
 
     private ListeningExecutorService executorService;
 
     private HttpClient client;
 
-    public RequestSendRunnable(BlockingDeque<String> queue, List<RateLimiter> limiterList, ListeningExecutorService executorService, HttpClient client) {
+    public RequestSendRunnable(BlockingDeque<String> queue, RateLimiter[] limiterList, ListeningExecutorService executorService, HttpClient client) {
         this.queue = queue;
         this.limiterList = limiterList;
         this.executorService = executorService;
@@ -48,7 +46,7 @@ public class RequestSendRunnable implements Runnable {
                 //获取此时最优渠道排序结果
                 List<Integer> channelList = HttpUtil.getChannel();
                 for(int i : channelList){
-                    available = this.limiterList.get(i).tryAcquire(5, TimeUnit.MILLISECONDS);
+                    available = limiterList[i].tryAcquire(5, TimeUnit.MILLISECONDS);
                     if(available){
                         channel = i;
                         break;
@@ -68,11 +66,13 @@ public class RequestSendRunnable implements Runnable {
                     OutBoundStateEnum state = result.getState();
                     switch (state){
                         case TIMEOUT:
-                            //降低流速
+                            //调低优先级，降低流速
                         case FAILURE:
-                            //置渠道不可用，并开始心跳检测；
+                            //置渠道不可用，开始心跳检测；
                             new Thread(new DetectiveThread(this.client, url)).start();
                             break;
+                        case SUCCESS:
+                            System.out.println("Success");
                         default:
                             break;
                     }

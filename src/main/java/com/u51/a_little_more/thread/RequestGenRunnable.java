@@ -1,5 +1,7 @@
 package com.u51.a_little_more.thread;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.concurrent.BlockingDeque;
 
 /**
