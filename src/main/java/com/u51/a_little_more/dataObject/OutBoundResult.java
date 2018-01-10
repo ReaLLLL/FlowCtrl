@@ -1,5 +1,7 @@
 package com.u51.a_little_more.dataObject;
 
+import com.google.common.util.concurrent.RateLimiter;
+
 import java.io.Serializable;
 
 /**
@@ -10,8 +12,10 @@ import java.io.Serializable;
  */
 public class OutBoundResult implements Serializable {
     private OutBoundStateEnum state;
+    private String reqNo;
     private int channel;
     private long time;
+    private RateLimiter limiter;
 
     public OutBoundStateEnum getState() {
         return state;
@@ -19,6 +23,14 @@ public class OutBoundResult implements Serializable {
 
     public void setState(OutBoundStateEnum state) {
         this.state = state;
+    }
+
+    public String getReqNo() {
+        return reqNo;
+    }
+
+    public void setReqNo(String reqNo) {
+        this.reqNo = reqNo;
     }
 
     public int getChannel() {
@@ -35,5 +47,13 @@ public class OutBoundResult implements Serializable {
 
     public void setTime(long time) {
         this.time = time;
+    }
+
+    public RateLimiter getLimiter() {
+        return limiter;
+    }
+
+    public void setLimiter(RateLimiter limiter) {
+        this.limiter = limiter;
     }
 }

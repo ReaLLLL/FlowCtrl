@@ -1,10 +1,10 @@
 package com.u51.a_little_more.thread;
 
-import org.apache.http.HttpResponse;
+import com.google.common.util.concurrent.RateLimiter;
+import com.u51.a_little_more.util.HttpUtil;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 
-import java.io.IOException;
+import java.util.Random;
 
 /**
  * <p>心跳检测渠道是否可用</p>
@@ -15,19 +15,40 @@ import java.io.IOException;
 public class DetectiveThread implements Runnable{
 
     private HttpClient client;
-    private String url;
+    private int channel;
+    private String reqNo;
+    private RateLimiter limiter;
 
-    public DetectiveThread(HttpClient client, String url) {
+    public DetectiveThread(HttpClient client, int channel, String reqNo, RateLimiter limiter) {
         this.client = client;
-        this.url = url;
+        this.channel = channel;
+        this.reqNo = reqNo;
+        this.limiter = limiter;
     }
 
     @Override
     public void run() {
-        try {
-            HttpResponse response = this.client.execute(new HttpGet(this.url));
-        } catch (IOException e) {
-            e.printStackTrace();
+        int interval = 48;
+        //String url = HttpUtil.buildUrl(this.channel, this.reqNo);
+        while(true){
+            try {
+                System.out.println("当前渠道通讯异常，渠道号："+client +"\n检测线程开始工作，线程号："+Thread.currentThread().getName()+"\n间隔："+interval);
+                Thread.sleep(interval*1000);
+                Random rand = new Random();
+                int cost = rand.nextInt(8)+1;
+                if(cost > 6){
+                    //如果调用正常，任务渠道恢复
+                    //HttpUtil.updateChannelState(this.channel);
+                    this.limiter.setRate(20);
+                    break;
+                }
+                else {
+                    interval = interval > 5 ? interval/2 : 2;
+                }
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
     }
 }

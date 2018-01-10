@@ -58,8 +58,7 @@ public class RequestSendRunnable implements Runnable {
                 }
 
                 //已获取令牌；
-                String url = HttpUtil.buildUrl(channel, ele);
-                final ListenableFuture<OutBoundResult> listenableFuture = this.executorService.submit(new OutBoundCallable(url, this.client));
+                final ListenableFuture<OutBoundResult> listenableFuture = this.executorService.submit(new OutBoundCallable(channel, ele, limiterList.get(channel), this.client));
                 Futures.addCallback(listenableFuture, new FutureCallback<OutBoundResult>() {
                     private HttpClient client = HttpClients.createDefault();
                     @Override
@@ -68,12 +67,15 @@ public class RequestSendRunnable implements Runnable {
                         switch (state){
                             case TIMEOUT:
                                 //调低优先级，降低流速
+                                result.getLimiter().setRate(0.2);
+                                break;
                             case FAILURE:
                                 //置渠道不可用，开始心跳检测；
-                                new Thread(new DetectiveThread(this.client, url)).start();
+                                new Thread(new DetectiveThread(this.client, result.getChannel(), result.getReqNo(), result.getLimiter())).start();
                                 break;
                             case SUCCESS:
-                                System.out.println("Success");
+                                if(result.getLimiter().getRate() != 20.0)
+                                    result.getLimiter().setRate(20);
                             default:
                                 break;
                         }
