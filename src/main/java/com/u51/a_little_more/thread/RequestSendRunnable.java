@@ -71,11 +71,12 @@ public class RequestSendRunnable implements Runnable {
                                 break;
                             case FAILURE:
                                 //置渠道不可用，开始心跳检测；
+                                result.getLimiter().setRate(0.02);
                                 new Thread(new DetectiveThread(this.client, result.getChannel(), result.getReqNo(), result.getLimiter())).start();
                                 break;
                             case SUCCESS:
                                 if(result.getLimiter().getRate() != 20.0)
-                                    result.getLimiter().setRate(20);
+                                    result.getLimiter().setRate(5*(result.getChannel()+1));
                             default:
                                 break;
                         }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-	   http://www.springframework.org/schema/beans/spring-beans.xsd">
+	   http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <bean id="threadPoolExecutorForProcess" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
         <property name="corePoolSize" value="6" />
@@ -17,7 +17,10 @@
     <bean id = "mainProcess" class="com.u51.a_little_more.processor.MainProcess">
         <property name="threadPoolForProcess" ref="threadPoolExecutorForProcess"/>
         <property name="requestTotalNum" value="${totalNum}"/>
+        <property name="startTime" value="${startTime}"/>
     </bean>
+
+    <bean id = "cacheConfig" class="com.u51.a_little_more.cache.ChannelCache"/>
 
 
 </beans>

@@ -32,14 +32,14 @@ public class DetectiveThread implements Runnable{
         //String url = HttpUtil.buildUrl(this.channel, this.reqNo);
         while(true){
             try {
-                System.out.println("当前渠道通讯异常，渠道号："+client +"\n检测线程开始工作，线程号："+Thread.currentThread().getName()+"\n间隔："+interval);
+                System.out.println("当前渠道通讯异常，渠道号："+this.channel +"\n检测线程开始工作，线程号："+Thread.currentThread().getName()+"\n间隔："+interval);
                 Thread.sleep(interval*1000);
                 Random rand = new Random();
                 int cost = rand.nextInt(8)+1;
                 if(cost > 6){
                     //如果调用正常，任务渠道恢复
-                    //HttpUtil.updateChannelState(this.channel);
-                    this.limiter.setRate(20);
+                    //HttpUtil.recoverChannelState(this.channel);
+                    this.limiter.setRate(5*(this.channel+1));
                     break;
                 }
                 else {

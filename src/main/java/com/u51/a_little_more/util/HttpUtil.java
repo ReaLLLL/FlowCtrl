@@ -1,8 +1,8 @@
 package com.u51.a_little_more.util;
 
 import com.google.common.util.concurrent.RateLimiter;
+import com.u51.a_little_more.cache.ChannelCache;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,18 +15,13 @@ public class HttpUtil {
 
     //生成请求url
     public static String buildUrl(int channelNo, String reqNo){
-        return "http://10.6.20.84:8081/index?requestNo="+reqNo+"&token=ABCd588";
+        return "http://10.6.20.84:808"+channelNo+"/index?reqNo="+reqNo+"&token=ABCd589";
     }
 
     //获取当前可用渠道优先级列表
     public static List<Integer> getChannel(){
-        List<Integer> list = new ArrayList<>();
-        list.add(4);
-        list.add(3);
-        list.add(2);
-        list.add(1);
-        list.add(0);
-        return list;
+        ChannelCache cache = (ChannelCache)SpringContextUtil.getBean("cacheConfig");
+        return cache.getCache("CHANNEL_INFO");
     }
 
     //更新渠道可用信息
