@@ -1,9 +1,12 @@
 package com.u51.a_little_more.util;
 
 import com.google.common.util.concurrent.RateLimiter;
-import com.u51.a_little_more.cache.ChannelCache;
+import com.u51.a_little_more.cache.PriorCache;
+import com.u51.a_little_more.dataObject.FundChannel;
 
+import java.util.ArrayList;
 import java.util.List;
+
 
 /**
  * <p>注释</p>
@@ -20,8 +23,13 @@ public class HttpUtil {
 
     //获取当前可用渠道优先级列表
     public static List<Integer> getChannel(){
-        ChannelCache cache = (ChannelCache)SpringContextUtil.getBean("cacheConfig");
-        return cache.getCache("CHANNEL_INFO");
+        List<Integer> priorList = new ArrayList<>();
+        PriorCache cache = (PriorCache)SpringContextUtil.getBean("cacheConfig");
+        List<FundChannel> fundChannels = cache.getCache("prior_INFO");
+        for(int i=0;i<fundChannels.size();i++){
+            priorList.add(Integer.parseInt(fundChannels.get(i).getId()));
+        }
+        return priorList;
     }
 
     //更新渠道可用信息
