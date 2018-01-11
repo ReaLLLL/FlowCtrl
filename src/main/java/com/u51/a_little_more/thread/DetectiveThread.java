@@ -37,9 +37,7 @@ public class DetectiveThread implements Runnable{
                 Random rand = new Random();
                 int cost = rand.nextInt(8)+1;
                 if(cost > 6){
-                    //如果调用正常，任务渠道恢复
-                    //HttpUtil.recoverChannelState(this.channel);
-                    this.limiter.setRate(5*(this.channel+1));
+                    HttpUtil.setChannelState(this.channel, true);
                     break;
                 }
                 else {

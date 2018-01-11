@@ -11,7 +11,6 @@ import org.springframework.context.annotation.ImportResource;
 public class DuoYiDianApplication {
 
 	public static void main(String[] args) {
-		ApplicationContext ctx = SpringApplication.run(DuoYiDianApplication.class, args);
-		SpringContextUtil.setApplicationContext(ctx);
+		SpringApplication.run(DuoYiDianApplication.class, args);
 	}
 }
