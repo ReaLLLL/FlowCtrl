@@ -14,7 +14,7 @@
         </property>
     </bean>
 
-    <bean id = "mainProcess" class="com.u51.a_little_more.processor.MainProcess">
+    <bean id = "mainProcess" class="com.u51.a_little_more.processor.MainProcess" depends-on="contextUtil">
         <property name="threadPoolForProcess" ref="threadPoolExecutorForProcess"/>
         <property name="requestTotalNum" value="${totalNum}"/>
         <property name="startTime" value="${startTime}"/>
@@ -22,5 +22,6 @@
 
     <bean id = "cacheConfig" class="com.u51.a_little_more.cache.ChannelCache"/>
 
+    <bean id = "contextUtil" class="com.u51.a_little_more.util.SpringContextUtil" depends-on="cacheConfig" />
 
 </beans>

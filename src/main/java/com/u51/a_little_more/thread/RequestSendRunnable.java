@@ -8,8 +8,12 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * <p>注释</p>
@@ -26,11 +30,23 @@ public class RequestSendRunnable implements Runnable {
 
     private HttpClient client;
 
-    public RequestSendRunnable(BlockingQueue<String> queue, List<RateLimiter> limiterList, ListeningExecutorService executorService, HttpClient client) {
+    private Map<Integer, AtomicInteger> statCount;
+
+    private Map<Integer, AtomicLong> statTime;
+
+    private CountDownLatch countDownLatch;
+
+    public RequestSendRunnable(BlockingQueue<String> queue, List<RateLimiter> limiterList,
+                               ListeningExecutorService executorService, HttpClient client,
+                               Map<Integer, AtomicInteger> statCount, Map<Integer, AtomicLong> statTime,
+                               CountDownLatch countDownLatch) {
         this.queue = queue;
         this.limiterList = limiterList;
         this.executorService = executorService;
         this.client = client;
+        this.statCount = statCount;
+        this.statTime = statTime;
+        this.countDownLatch = countDownLatch;
     }
 
     @Override
@@ -64,6 +80,7 @@ public class RequestSendRunnable implements Runnable {
                     @Override
                     public void onSuccess(OutBoundResult result) {
                         OutBoundStateEnum state = result.getState();
+                        int channel = result.getChannel();
                         switch (state){
                             case TIMEOUT:
                                 //调低优先级，降低流速
@@ -71,12 +88,20 @@ public class RequestSendRunnable implements Runnable {
                                 break;
                             case FAILURE:
                                 //置渠道不可用，开始心跳检测；
-                                result.getLimiter().setRate(0.02);
-                                new Thread(new DetectiveThread(this.client, result.getChannel(), result.getReqNo(), result.getLimiter())).start();
+                                if(HttpUtil.isNeedDetect(channel)){
+                                    HttpUtil.setChannelState(channel, false);
+                                    new Thread(new DetectiveThread(this.client, channel, result.getReqNo(), result.getLimiter())).start();
+                                }
                                 break;
                             case SUCCESS:
+                                if(HttpUtil.isNeedSample()){
+                                    System.out.println("采集交易信息");
+                                    countDownLatch.countDown();
+                                    statCount.get(channel).getAndIncrement();
+                                    statTime.get(channel).addAndGet(result.getTime());
+                                }
                                 if(result.getLimiter().getRate() != 20.0)
-                                    result.getLimiter().setRate(5*(result.getChannel()+1));
+                                    result.getLimiter().setRate((channel+1)*4);
                             default:
                                 break;
                         }
