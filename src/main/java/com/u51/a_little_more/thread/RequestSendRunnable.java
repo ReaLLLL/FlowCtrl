@@ -24,26 +24,29 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RequestSendRunnable implements Runnable {
     private BlockingQueue<String> queue;
 
-    private List<RateLimiter> limiterList;
+    private Map<String, RateLimiter> limiterList;
 
     private ListeningExecutorService executorService;
 
     private HttpClient client;
 
-    private Map<Integer, AtomicInteger> statCount;
+    private String token;
 
-    private Map<Integer, AtomicLong> statTime;
+    private Map<String, AtomicInteger> statCount;
+
+    private Map<String, AtomicLong> statTime;
 
     private CountDownLatch countDownLatch;
 
-    public RequestSendRunnable(BlockingQueue<String> queue, List<RateLimiter> limiterList,
+    public RequestSendRunnable(BlockingQueue<String> queue, Map<String, RateLimiter> limiterList,
                                ListeningExecutorService executorService, HttpClient client,
-                               Map<Integer, AtomicInteger> statCount, Map<Integer, AtomicLong> statTime,
-                               CountDownLatch countDownLatch) {
+                               String token, Map<String, AtomicInteger> statCount,
+                               Map<String, AtomicLong> statTime, CountDownLatch countDownLatch) {
         this.queue = queue;
         this.limiterList = limiterList;
         this.executorService = executorService;
         this.client = client;
+        this.token = token;
         this.statCount = statCount;
         this.statTime = statTime;
         this.countDownLatch = countDownLatch;
@@ -57,15 +60,15 @@ public class RequestSendRunnable implements Runnable {
                 //从待发送请求队列中取出请求信息
                 ele = this.queue.take();
                 boolean available = false;
-                int channel = 0;
+                String channel = "";
 
                 while(true) {
                     //获取此时最优渠道排序结果
-                    List<Integer> channelList = HttpUtil.getChannel();
-                    for(int i : channelList){
-                        available = limiterList.get(i).tryAcquire(5, TimeUnit.MILLISECONDS);
+                    List<String> channelList = HttpUtil.getChannel();
+                    for(String c : channelList){
+                        available = limiterList.get(c).tryAcquire(5, TimeUnit.MILLISECONDS);
                         if(available){
-                            channel = i;
+                            channel = c;
                             break;
                         }
                     }
@@ -74,17 +77,19 @@ public class RequestSendRunnable implements Runnable {
                 }
 
                 //已获取令牌；
-                final ListenableFuture<OutBoundResult> listenableFuture = this.executorService.submit(new OutBoundCallable(channel, ele, limiterList.get(channel), this.client));
+                final ListenableFuture<OutBoundResult> listenableFuture = this.executorService.submit(new OutBoundCallable(channel, ele, limiterList.get(channel), this.client, this.token));
                 Futures.addCallback(listenableFuture, new FutureCallback<OutBoundResult>() {
                     private HttpClient client = HttpClients.createDefault();
                     @Override
                     public void onSuccess(OutBoundResult result) {
                         OutBoundStateEnum state = result.getState();
-                        int channel = result.getChannel();
+                        String channel = result.getChannel();
+                        double i = 0.0;
                         switch (state){
                             case TIMEOUT:
                                 //调低优先级，降低流速
-                                result.getLimiter().setRate(0.2);
+                                i= result.getLimiter().getRate();
+                                result.getLimiter().setRate(i/20.0);
                                 break;
                             case FAILURE:
                                 //置渠道不可用，开始心跳检测；
@@ -95,13 +100,14 @@ public class RequestSendRunnable implements Runnable {
                                 break;
                             case SUCCESS:
                                 if(HttpUtil.isNeedSample()){
-                                    System.out.println("采集交易信息");
                                     countDownLatch.countDown();
                                     statCount.get(channel).getAndIncrement();
                                     statTime.get(channel).addAndGet(result.getTime());
                                 }
-                                if(result.getLimiter().getRate() != 20.0)
-                                    result.getLimiter().setRate((channel+1)*4);
+                                if(result.getLimiter().getRate() <1) {
+                                    i = result.getLimiter().getRate();
+                                    result.getLimiter().setRate(i*20.0);
+                                }
                             default:
                                 break;
                         }

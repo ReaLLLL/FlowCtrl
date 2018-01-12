@@ -15,11 +15,11 @@ import java.util.Random;
 public class DetectiveThread implements Runnable{
 
     private HttpClient client;
-    private int channel;
+    private String channel;
     private String reqNo;
     private RateLimiter limiter;
 
-    public DetectiveThread(HttpClient client, int channel, String reqNo, RateLimiter limiter) {
+    public DetectiveThread(HttpClient client, String channel, String reqNo, RateLimiter limiter) {
         this.client = client;
         this.channel = channel;
         this.reqNo = reqNo;

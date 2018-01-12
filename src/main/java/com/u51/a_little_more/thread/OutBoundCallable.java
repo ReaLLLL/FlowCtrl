@@ -20,7 +20,7 @@ import java.util.concurrent.Callable;
  * @version $Id: OutBoundCallable.java, v 0.1 2018年01月09日 下午11:54:54 alexsong Exp $
  */
 public class OutBoundCallable implements Callable<OutBoundResult> {
-    private int channel;
+    private String channel;
 
     private String reqNo;
 
@@ -28,11 +28,14 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
 
     private HttpClient client;
 
-    public OutBoundCallable(int channel, String reqNo, RateLimiter limiter, HttpClient client) {
+    private String token;
+
+    public OutBoundCallable(String channel, String reqNo, RateLimiter limiter, HttpClient client, String token) {
         this.channel = channel;
         this.reqNo = reqNo;
         this.limiter = limiter;
         this.client = client;
+        this.token = token;
     }
 
     @Override
@@ -40,7 +43,8 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
         long start = System.currentTimeMillis();
 
         OutBoundResult result = new OutBoundResult();
-        String url = HttpUtil.buildUrl(this.channel, this.reqNo);
+        String url = HttpUtil.buildUrl(this.channel, this.reqNo, this.token);
+        System.out.println(url);
 //        HttpGet httpGet = new HttpGet(url);
 //        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
 //        httpGet.setConfig(requestConfig);

@@ -13,7 +13,7 @@ import java.io.Serializable;
 public class OutBoundResult implements Serializable {
     private OutBoundStateEnum state;
     private String reqNo;
-    private int channel;
+    private String channel;
     private long time;
     private RateLimiter limiter;
 
@@ -33,11 +33,11 @@ public class OutBoundResult implements Serializable {
         this.reqNo = reqNo;
     }
 
-    public int getChannel() {
+    public String getChannel() {
         return channel;
     }
 
-    public void setChannel(int channel) {
+    public void setChannel(String channel) {
         this.channel = channel;
     }
 

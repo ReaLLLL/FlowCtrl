@@ -3,6 +3,7 @@ package com.u51.a_little_more.processor;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.RateLimiter;
+import com.u51.a_little_more.dataObject.FundChannel;
 import com.u51.a_little_more.thread.RequestGenRunnable;
 import com.u51.a_little_more.thread.RequestSendRunnable;
 import com.u51.a_little_more.util.HttpUtil;
@@ -36,6 +37,8 @@ public class MainProcess implements InitializingBean {
 
     private String startTime;
 
+    private String token;
+
     public ThreadPoolTaskExecutor getThreadPoolForProcess() {
         return threadPoolForProcess;
     }
@@ -60,6 +63,14 @@ public class MainProcess implements InitializingBean {
         this.startTime = startTime;
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public void doProcess() throws Exception {
         System.out.println("===========主流程开始准备!!!===========");
 
@@ -70,15 +81,16 @@ public class MainProcess implements InitializingBean {
 
         ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(100));
         BlockingQueue<String> queue = new ArrayBlockingQueue<>(100);
-        final List<RateLimiter> rateList = new ArrayList<>();
-        Map<Integer, AtomicInteger> statCount = new HashMap<>();
-        Map<Integer, AtomicLong> statTime = new HashMap<>();
-        CountDownLatch count = new CountDownLatch(100);
+        Map<String, RateLimiter> rateMap = new HashMap<>();
+        Map<String, AtomicInteger> statCount = new HashMap<>();
+        Map<String, AtomicLong> statTime = new HashMap<>();
+        CountDownLatch count = new CountDownLatch(500);
 
-        for(int i = 0; i < 5; i++){
-            rateList.add(RateLimiter.create((i+1)*4));
-            statCount.put(i, new AtomicInteger(0));
-            statTime.put(i, new AtomicLong(0L));
+        for(int i = 1; i < 6; i++){
+
+            rateMap.put("C"+i, RateLimiter.create((1<<(i-1))+4));
+            statCount.put("C"+i, new AtomicInteger(0));
+            statTime.put("C"+i, new AtomicLong(0L));
         }
 
         while (current < start){
@@ -91,21 +103,25 @@ public class MainProcess implements InitializingBean {
 
         this.threadPoolForProcess.execute(new RequestGenRunnable(queue, this.requestTotalNum));
         for(int i = 0; i < 5; i++){
-            this.threadPoolForProcess.execute(new RequestSendRunnable(queue, rateList, executorService, client, statCount, statTime, count));
+            this.threadPoolForProcess.execute(new RequestSendRunnable(queue, rateMap, executorService, client, token, statCount, statTime, count));
         }
 
         System.out.println("===========开始渠道处理耗时采样!!!===========");
         HttpUtil.setChannelSample(true);
 
         count.await();
-        for(int i = 0; i<5; i++){
-            System.out.println("当前渠道编号："+(i+1));
-            System.out.println(" 总交易笔数："+ statCount.get(i).get());
-            System.out.println(" 总交易耗时："+ statTime.get(i).get());
+        List<FundChannel> list = new ArrayList<>();
+        for(int i = 1; i<6; i++){
+            System.out.println("当前渠道编号：C"+i);
+            System.out.println(" 总交易笔数："+ statCount.get("C"+i).get());
+            System.out.println(" 总交易耗时："+ statTime.get("C"+i).get());
+            list.add(new FundChannel("C"+i, "", String.valueOf(statTime.get("C"+i).get()/statCount.get("C"+i).get()),"",0));
         }
 
         HttpUtil.setChannelSample(false);
-        System.out.println("===========渠道处理耗时采样结束!!!===========");
+
+        System.out.println("===========渠道处理耗时采样结束,开始更新缓存信息!!!===========");
+        HttpUtil.resetChannel(list);
 
         System.out.println("===========主流程处理结束!!!===========");
     }
