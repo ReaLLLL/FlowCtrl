@@ -115,13 +115,18 @@ public class MainProcess implements InitializingBean {
             System.out.println("当前渠道编号：C"+i);
             System.out.println(" 总交易笔数："+ statCount.get("C"+i).get());
             System.out.println(" 总交易耗时："+ statTime.get("C"+i).get());
-            list.add(new FundChannel("C"+i, "", String.valueOf(statTime.get("C"+i).get()/statCount.get("C"+i).get()),"",0));
+            list.add(new FundChannel("C"+i, 7000+1000*i, statTime.get("C"+i).get()/statCount.get("C"+i).get(),"",1));
         }
 
         HttpUtil.setChannelSample(false);
 
         System.out.println("===========渠道处理耗时采样结束,开始更新缓存信息!!!===========");
         HttpUtil.resetChannel(list);
+        List<String> l = HttpUtil.getChannel();
+        for(String s : l){
+            rateMap.get(s).setRate(1<<(4-l.indexOf(s))+1);
+        }
+        System.out.println("===========更新缓存信息结束!!!===========");
 
         System.out.println("===========主流程处理结束!!!===========");
     }

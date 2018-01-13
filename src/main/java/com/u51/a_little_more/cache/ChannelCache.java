@@ -53,11 +53,11 @@ public class ChannelCache extends AbstractCache<String, Object> implements Initi
     public void afterPropertiesSet() throws Exception {
 
         this.channelList = new ArrayList<>(5);
-        this.channelList.add(new FundChannel("C1","50000","1000","200",1));
-        this.channelList.add(new FundChannel("C2","50000","1000","200",2));
-        this.channelList.add(new FundChannel("C3","50000","1000","200",3));
-        this.channelList.add(new FundChannel("C4","50000","1000","200",4));
-        this.channelList.add(new FundChannel("C5","50000","1000","200",5));
+        this.channelList.add(new FundChannel("C1",8000,1000,"200",1));
+        this.channelList.add(new FundChannel("C2",9000,1000,"200",2));
+        this.channelList.add(new FundChannel("C3",10000,1000,"200",3));
+        this.channelList.add(new FundChannel("C4",11000,1000,"200",4));
+        this.channelList.add(new FundChannel("C5",12000,1000,"200",5));
 
 
         this.channelAvailableMap = new HashMap<>(5);
@@ -83,6 +83,9 @@ public class ChannelCache extends AbstractCache<String, Object> implements Initi
     public void resetChannelList(List<FundChannel> SampleList){
         this.channelList.clear();
         this.channelList.addAll(SampleList);
+        for(FundChannel f : this.channelList){
+            f.setPrior((int)(f.getMark()/f.getTime()));
+            System.out.println(f.toString());
+        }
     }
-
 }

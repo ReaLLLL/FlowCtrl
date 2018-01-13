@@ -26,36 +26,36 @@ public class Route {
 
     public List<FundChannel> descSort(Map<String,FundChannel> channelMap) {
         List<FundChannel> list = new ArrayList<FundChannel>();
-        Iterator<String> keys = channelMap.keySet().iterator();
-        Map<String,Integer> priorCache = new HashMap<>();
-        while (keys.hasNext()) {
-            String key = keys.next();
-            FundChannel fund = channelMap.get(key);
-            //假设1 表示成功
-            if(!"1".equals(fund.getState())){
-                keys.remove();
-                continue;
-            }
-
-            int prior;
-            if(flag){
-                double mark = Double.parseDouble(fund.getMark());
-                double time = Double.parseDouble(fund.getTime());
-                double tmp = (mark/time)*10000;
-                prior = (int)tmp;
-            }else {
-                prior = cache_mark.getCache("markCache").get(fund.getId());
-            }
-
-            priorCache.put(fund.getId(),prior);
-            fund.setPrior(prior);
-            list.add(fund);
-        }
-
-        cache_mark.put("markCache",priorCache);
-        Collections.sort(list);
-
-        flag = false;
+//        Iterator<String> keys = channelMap.keySet().iterator();
+//        Map<String,Integer> priorCache = new HashMap<>();
+//        while (keys.hasNext()) {
+//            String key = keys.next();
+//            FundChannel fund = channelMap.get(key);
+//            //假设1 表示成功
+//            if(!"1".equals(fund.getState())){
+//                keys.remove();
+//                continue;
+//            }
+//
+//            int prior;
+//            if(flag){
+//                double mark = Double.parseDouble(fund.getMark());
+//                double time = Double.parseDouble(fund.getTime());
+//                double tmp = (mark/time)*10000;
+//                prior = (int)tmp;
+//            }else {
+//                prior = cache_mark.getCache("markCache").get(fund.getId());
+//            }
+//
+//            priorCache.put(fund.getId(),prior);
+//            fund.setPrior(prior);
+//            list.add(fund);
+//        }
+//
+//        cache_mark.put("markCache",priorCache);
+//        Collections.sort(list);
+//
+//        flag = false;
 
         return list;
     }

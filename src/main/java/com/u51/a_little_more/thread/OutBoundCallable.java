@@ -44,7 +44,7 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
 
         OutBoundResult result = new OutBoundResult();
         String url = HttpUtil.buildUrl(this.channel, this.reqNo, this.token);
-        System.out.println(url);
+//        System.out.println(url);
 //        HttpGet httpGet = new HttpGet(url);
 //        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
 //        httpGet.setConfig(requestConfig);
@@ -57,9 +57,9 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
 //        else
 //            result.setState(OutBoundStateEnum.FAILURE);
 
-        Random rand = new Random();
-        int i = rand.nextInt(9)+8;
-        Thread.sleep(i*100);
+
+        int c = this.channel.charAt(1)-48;
+        Thread.sleep(800+100*c);
         result.setState(OutBoundStateEnum.SUCCESS);
         result.setChannel(this.channel);
         result.setTime(System.currentTimeMillis() - start);

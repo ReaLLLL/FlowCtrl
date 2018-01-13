@@ -9,9 +9,9 @@ public class FundChannel implements Serializable, Comparable<FundChannel>{
     /**渠道编号*/
     private String Id;
     /**分数*/
-    private String mark;
+    private long mark;
     /**单比交易平均时间*/
-    private String time;
+    private long time;
     /**渠道状态 200 Number(10)服务在指令处理成功后，返回该指令的处理时间。单位为毫秒，例：1500，表示本次处理时间为1.5秒
      400 DUPLICATE_REQUEST 重复请求
      401 INVALID_REQUEST 请求校验失败
@@ -26,8 +26,9 @@ public class FundChannel implements Serializable, Comparable<FundChannel>{
 //    /**维护时间 总渠道维护不超过10分钟*/
 //    private String restTime;
 
-    public FundChannel(String Id,String mark,String time,String state,int prior){
-        this.Id= Id;
+
+    public FundChannel(String id, long mark, long time, String state, int prior) {
+        Id = id;
         this.mark = mark;
         this.time = time;
         this.state = state;
@@ -42,19 +43,19 @@ public class FundChannel implements Serializable, Comparable<FundChannel>{
         Id = id;
     }
 
-    public String getMark() {
+    public long getMark() {
         return mark;
     }
 
-    public void setMark(String mark) {
+    public void setMark(long mark) {
         this.mark = mark;
     }
 
-    public String getTime() {
+    public long getTime() {
         return time;
     }
 
-    public void setTime(String time) {
+    public void setTime(long time) {
         this.time = time;
     }
 
@@ -85,5 +86,17 @@ public class FundChannel implements Serializable, Comparable<FundChannel>{
         }
         return 0;*/
         return -(int)(Math.ceil(this.prior - o.getPrior()));
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("当前渠道：").append(this.Id)
+                .append(" 分数：").append(this.mark)
+                .append(" 平均耗时：").append(this.time)
+                .append(" 当前状态：").append(this.state)
+                .append(" 优先级：").append(this.prior);
+
+        return sb.toString();
     }
 }

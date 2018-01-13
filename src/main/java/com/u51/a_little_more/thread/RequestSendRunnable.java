@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RequestSendRunnable implements Runnable {
     private BlockingQueue<String> queue;
 
-    private Map<String, RateLimiter> limiterList;
+    private volatile Map<String, RateLimiter> limiterList;
 
     private ListeningExecutorService executorService;
 
