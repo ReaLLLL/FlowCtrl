@@ -108,6 +108,15 @@ public class RequestSendRunnable implements Runnable {
                                     i = result.getLimiter().getRate();
                                     result.getLimiter().setRate(i*20.0);
                                 }
+                                break;
+                            case OTHER:
+                                //将此请求再次放入请求队列，重新路由
+                                try {
+                                    queue.put(result.getReqNo());
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
                             default:
                                 break;
                         }

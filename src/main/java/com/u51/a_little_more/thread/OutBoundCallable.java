@@ -40,29 +40,34 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
 
     @Override
     public OutBoundResult call() throws Exception {
-        long start = System.currentTimeMillis();
-
         OutBoundResult result = new OutBoundResult();
-        String url = HttpUtil.buildUrl(this.channel, this.reqNo, this.token);
-//        System.out.println(url);
-//        HttpGet httpGet = new HttpGet(url);
-//        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
-//        httpGet.setConfig(requestConfig);
-//        HttpResponse response = this.client.execute(httpGet);
-//
-//        if(response == null)
-//            result.setState(OutBoundStateEnum.TIMEOUT);
-//        else if(EntityUtils.toString(response.getEntity()).equals("200"))
-//            result.setState(OutBoundStateEnum.SUCCESS);
-//        else
-//            result.setState(OutBoundStateEnum.FAILURE);
+        if(!HttpUtil.isChannelAvailable(this.channel)){
+            //路由时渠道可用，实际发送时不可用
+            result.setState(OutBoundStateEnum.OTHER);
+        }else {
+            String url = HttpUtil.buildUrl(this.channel, this.reqNo, this.token);
+            HttpGet httpGet = new HttpGet(url);
+            RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
+            httpGet.setConfig(requestConfig);
 
+            long start = System.currentTimeMillis();
+            HttpResponse response = this.client.execute(httpGet);
+            long end = System.currentTimeMillis();
 
-        int c = this.channel.charAt(1)-48;
-        Thread.sleep(800+100*c);
-        result.setState(OutBoundStateEnum.SUCCESS);
+            if(response == null)
+                result.setState(OutBoundStateEnum.TIMEOUT);
+            else if(EntityUtils.toString(response.getEntity()).equals("200"))
+                result.setState(OutBoundStateEnum.SUCCESS);
+            else
+                result.setState(OutBoundStateEnum.FAILURE);
+
+            result.setTime(end - start);
+        }
+
+//        int c = this.channel.charAt(1)-48;
+//        Thread.sleep(800+100*c);
+//        result.setState(OutBoundStateEnum.SUCCESS);
         result.setChannel(this.channel);
-        result.setTime(System.currentTimeMillis() - start);
         result.setLimiter(this.limiter);
         return result;
     }

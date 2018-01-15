@@ -9,7 +9,8 @@ package com.u51.a_little_more.dataObject;
 public enum OutBoundStateEnum {
     SUCCESS("200","成功"),
     FAILURE("201","失败"),
-    TIMEOUT("202","超时");
+    TIMEOUT("202","超时"),
+    OTHER("203","其他");
 
     private String code;
     private String desc;

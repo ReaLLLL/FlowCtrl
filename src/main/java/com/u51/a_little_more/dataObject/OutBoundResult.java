@@ -14,7 +14,7 @@ public class OutBoundResult implements Serializable {
     private OutBoundStateEnum state;
     private String reqNo;
     private String channel;
-    private long time;
+    private long time = 1000;
     private RateLimiter limiter;
 
     public OutBoundStateEnum getState() {

@@ -84,7 +84,7 @@ public class MainProcess implements InitializingBean {
         Map<String, RateLimiter> rateMap = new HashMap<>();
         Map<String, AtomicInteger> statCount = new HashMap<>();
         Map<String, AtomicLong> statTime = new HashMap<>();
-        CountDownLatch count = new CountDownLatch(500);
+        CountDownLatch count = new CountDownLatch(300);
 
         for(int i = 1; i < 6; i++){
 
@@ -120,12 +120,14 @@ public class MainProcess implements InitializingBean {
 
         HttpUtil.setChannelSample(false);
 
+        System.out.println(HttpUtil.getChannel());
         System.out.println("===========渠道处理耗时采样结束,开始更新缓存信息!!!===========");
         HttpUtil.resetChannel(list);
         List<String> l = HttpUtil.getChannel();
         for(String s : l){
             rateMap.get(s).setRate(1<<(4-l.indexOf(s))+1);
         }
+        System.out.println(HttpUtil.getChannel());
         System.out.println("===========更新缓存信息结束!!!===========");
 
         System.out.println("===========主流程处理结束!!!===========");
