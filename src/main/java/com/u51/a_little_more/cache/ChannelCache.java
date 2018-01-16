@@ -15,18 +15,16 @@ public class ChannelCache extends AbstractCache<String, Object> implements Initi
     private static final String CHANNEL_INFO_KEY = "CHANNEL_INFO";
     private static final String CHANNEL_DETECTIVE_KEY = "DETECTIVE_FLAG_";
     private static final String CHANNEL_SAMPLE_KEY = "CHANNEL_SAMPLE";
-    private volatile List<FundChannel> channelList;
-    private volatile Map<String, Boolean> channelAvailableMap;
+    private List<FundChannel> channelList;
+    private Map<String, Boolean> channelAvailableMap;
 
     protected Object loadData(String key){
         if(key.equals(CHANNEL_INFO_KEY)){
             Collections.sort(this.channelList, new Comparator<FundChannel>() {
                 @Override
                 public int compare(FundChannel o1, FundChannel o2) {
-                    if(o1.getPrior() > o2.getPrior())
+                    if(o1.getPrior() >= o2.getPrior())
                         return -1;
-                    else if(o1.getPrior() == o2.getPrior())
-                        return 0;
                     else
                         return 1;
                 }
@@ -84,7 +82,7 @@ public class ChannelCache extends AbstractCache<String, Object> implements Initi
         this.channelList.clear();
         this.channelList.addAll(SampleList);
         for(FundChannel f : this.channelList){
-            f.setPrior((int)(f.getMark()/f.getTime()));
+            f.setPrior((int)(50-30*f.getMark()/f.getTime()));
             System.out.println(f.toString());
         }
     }

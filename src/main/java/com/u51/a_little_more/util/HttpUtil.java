@@ -16,14 +16,26 @@ import java.util.Map;
  */
 public class HttpUtil {
     private static Map<Integer, String> url = new HashMap<>();
-    private static ChannelCache cache;
+    private volatile static ChannelCache cache;
 
     static {
-        url.put(1, "http://10.6.20.84:8081");
-        url.put(2, "http://10.1.201.41:8082");
-        url.put(3, "http://10.1.201.41:8083");
-        url.put(4, "http://10.6.20.84:8084");
-        url.put(5, "http://10.6.200.51:8085");
+//        url.put(1, "http://10.6.20.67:8081/hello/c1");
+//        url.put(2, "http://10.6.20.67:8081/hello/c2");
+//        url.put(3, "http://10.6.20.67:8081/hello/c3");
+//        url.put(4, "http://10.6.20.67:8081/hello/c4");
+//        url.put(5, "http://10.6.20.67:8081/hello/c5");
+
+        url.put(1, "http://10.6.200.56:8081/");
+        url.put(2, "http://10.6.200.56:8082/");
+        url.put(3, "http://10.6.200.56:8083/");
+        url.put(4, "http://10.6.200.56:8084/");
+        url.put(5, "http://10.6.200.56:8085/");
+
+//        url.put(1, "http://test.hello51world.yacolpay.com/ccmchannel2/");
+//        url.put(2, "http://test.hello51world.yacolpay.com/ccmchannel2/");
+//        url.put(3, "http://test.hello51world.yacolpay.com/ccmchannel3/");
+//        url.put(4, "http://test.hello51world.yacolpay.com/ccmchannel4/");
+//        url.put(5, "http://test.hello51world.yacolpay.com/ccmchannel5/");
 
         cache = (ChannelCache)SpringContextUtil.getBean("cacheConfig");
     }
@@ -31,7 +43,8 @@ public class HttpUtil {
     public static String buildUrl(String channelNo, String reqNo, String token){
         //return "http://cc.intra.yacolpay.com/"+channelNo+"/apply.htm?reqNo="+reqNo+"&token="+token;
         int c = channelNo.charAt(1)-48;
-        return url.get(c)+"/index?reqNo="+reqNo+"&token="+token;
+        return url.get(c)+"index.htm?reqNo="+reqNo+"&token="+token;
+        //return url.get(c)+"/apply.htm?reqNo="+reqNo+"&token="+token;
     }
 
     //获取当前可用渠道优先级列表
@@ -48,6 +61,8 @@ public class HttpUtil {
         cache.updateChannelState(channel, state);
         cache.refresh("DETECTIVE_FLAG_"+channel);
         cache.refresh("CHANNEL_INFO");
+
+        System.out.println("当前可用渠道列表："+getChannel());
     }
 
     //获取当前渠道是否可用

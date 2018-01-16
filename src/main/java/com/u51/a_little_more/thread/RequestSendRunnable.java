@@ -5,6 +5,7 @@ import com.u51.a_little_more.dataObject.OutBoundResult;
 import com.u51.a_little_more.dataObject.OutBoundStateEnum;
 import com.u51.a_little_more.util.HttpUtil;
 import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class RequestSendRunnable implements Runnable {
 
     private ListeningExecutorService executorService;
 
-    private HttpClient client;
+    private CloseableHttpClient client;
 
     private String token;
 
@@ -39,7 +40,7 @@ public class RequestSendRunnable implements Runnable {
     private CountDownLatch countDownLatch;
 
     public RequestSendRunnable(BlockingQueue<String> queue, Map<String, RateLimiter> limiterList,
-                               ListeningExecutorService executorService, HttpClient client,
+                               ListeningExecutorService executorService, CloseableHttpClient client,
                                String token, Map<String, AtomicInteger> statCount,
                                Map<String, AtomicLong> statTime, CountDownLatch countDownLatch) {
         this.queue = queue;
@@ -88,6 +89,7 @@ public class RequestSendRunnable implements Runnable {
                         switch (state){
                             case TIMEOUT:
                                 //调低优先级，降低流速
+                                System.out.println("当前请求超时");
                                 i= result.getLimiter().getRate();
                                 result.getLimiter().setRate(i/20.0);
                                 break;
@@ -95,7 +97,7 @@ public class RequestSendRunnable implements Runnable {
                                 //置渠道不可用，开始心跳检测；
                                 if(HttpUtil.isNeedDetect(channel)){
                                     HttpUtil.setChannelState(channel, false);
-                                    new Thread(new DetectiveThread(this.client, channel, result.getReqNo(), result.getLimiter())).start();
+                                    new Thread(new DetectiveThread(this.client, channel, result.getReqNo(), token)).start();
                                 }
                                 break;
                             case SUCCESS:
@@ -112,6 +114,7 @@ public class RequestSendRunnable implements Runnable {
                             case OTHER:
                                 //将此请求再次放入请求队列，重新路由
                                 try {
+                                    System.out.println("将此请求再次放入请求队列，重新路由");
                                     queue.put(result.getReqNo());
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();

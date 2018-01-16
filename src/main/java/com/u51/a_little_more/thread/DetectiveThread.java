@@ -1,8 +1,13 @@
 package com.u51.a_little_more.thread;
 
 import com.google.common.util.concurrent.RateLimiter;
+import com.u51.a_little_more.dataObject.OutBoundStateEnum;
 import com.u51.a_little_more.util.HttpUtil;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 
 import java.util.Random;
 
@@ -17,31 +22,34 @@ public class DetectiveThread implements Runnable{
     private HttpClient client;
     private String channel;
     private String reqNo;
-    private RateLimiter limiter;
+    private String token;
 
-    public DetectiveThread(HttpClient client, String channel, String reqNo, RateLimiter limiter) {
+    public DetectiveThread(HttpClient client, String channel, String reqNo, String token) {
         this.client = client;
         this.channel = channel;
         this.reqNo = reqNo;
-        this.limiter = limiter;
+        this.token = token;
     }
 
     @Override
     public void run() {
         int interval = 48;
-        //String url = HttpUtil.buildUrl(this.channel, this.reqNo);
         while(true){
             try {
                 System.out.println("当前渠道通讯异常，渠道号："+this.channel +"\n检测线程开始工作，线程号："+Thread.currentThread().getName()+"\n间隔："+interval);
+
                 Thread.sleep(interval*1000);
-                Random rand = new Random();
-                int cost = rand.nextInt(8)+1;
-                if(cost > 6){
+                String url = HttpUtil.buildUrl(this.channel, this.reqNo, this.token);
+                HttpGet httpGet = new HttpGet(url);
+                RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
+                httpGet.setConfig(requestConfig);
+                HttpResponse response = this.client.execute(httpGet);
+
+                if(response == null || EntityUtils.toString(response.getEntity()).length() > 6 )
+                    interval = interval > 5 ? interval/2 : 2;
+                else{
                     HttpUtil.setChannelState(this.channel, true);
                     break;
-                }
-                else {
-                    interval = interval > 5 ? interval/2 : 2;
                 }
             }catch (Exception e) {
                 e.printStackTrace();

@@ -1,6 +1,7 @@
 package com.u51.a_little_more.thread;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * <p>注释</p>
@@ -27,6 +28,23 @@ public class RequestGenRunnable implements Runnable{
                 Thread.sleep(10);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+        }
+
+        System.out.print("请求生成完毕");
+
+        while(true){
+            int size = this.queue.size();
+            System.out.print("当前剩余待发送请求数量：" + size);
+
+            if(size == 0)
+                break;
+            else {
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
