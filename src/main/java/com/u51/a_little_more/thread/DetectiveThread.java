@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.u51.a_little_more.dataObject.OutBoundStateEnum;
 import com.u51.a_little_more.util.HttpUtil;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
@@ -33,7 +34,7 @@ public class DetectiveThread implements Runnable{
 
     @Override
     public void run() {
-        int interval = 48;
+        int interval = 32;
         while(true){
             try {
                 System.out.println("当前渠道通讯异常，渠道号："+this.channel +"\n检测线程开始工作，线程号："+Thread.currentThread().getName()+"\n间隔："+interval);
@@ -45,10 +46,12 @@ public class DetectiveThread implements Runnable{
                 httpGet.setConfig(requestConfig);
                 HttpResponse response = this.client.execute(httpGet);
 
-                if(response == null || EntityUtils.toString(response.getEntity()).length() > 6 )
+                if(response == null || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
                     interval = interval > 5 ? interval/2 : 2;
                 else{
+                    System.out.println("当前渠道已恢复，渠道编号："+channel);
                     HttpUtil.setChannelState(this.channel, true);
+                    //System.out.println(HttpUtil.getChannel());
                     break;
                 }
             }catch (Exception e) {

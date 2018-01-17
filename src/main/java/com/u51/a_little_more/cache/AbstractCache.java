@@ -1,8 +1,8 @@
 package com.u51.a_little_more.cache;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.google.common.cache.*;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>注释</p>
@@ -15,11 +15,20 @@ public abstract class AbstractCache<K, V> {
 
     public AbstractCache(){
         cache = CacheBuilder.newBuilder()
-                .maximumSize(10)
+                .refreshAfterWrite(1, TimeUnit.MINUTES)
+                .expireAfterAccess(2, TimeUnit.MINUTES)
+                .maximumSize(50)
+                .removalListener(new RemovalListener<K, V>() {
+                    @Override
+                    public void onRemoval(RemovalNotification<K, V> notification) {
+                        System.out.println("缓存数据被移除");
+                    }
+                })
                 .build(new CacheLoader<K, V>() {
                     @Override
                     public V load(K k) throws Exception
                     {
+                        System.out.println("缓存数据被加载");
                         return loadData(k);
                     }
                 });
@@ -40,5 +49,9 @@ public abstract class AbstractCache<K, V> {
     public void put(K k, V v)
     {
         cache.put(k, v);
+    }
+
+    public void remove(K k){
+        cache.invalidate(k);
     }
 }

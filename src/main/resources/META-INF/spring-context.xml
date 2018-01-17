@@ -14,15 +14,43 @@
         </property>
     </bean>
 
-    <bean id = "mainProcess" class="com.u51.a_little_more.processor.MainProcess" depends-on="contextUtil">
+    <bean id = "mainProcess" class="com.u51.a_little_more.processor.MainProcess">
         <property name="threadPoolForProcess" ref="threadPoolExecutorForProcess"/>
         <property name="requestTotalNum" value="${totalNum}"/>
         <property name="startTime" value="${startTime}"/>
         <property name="token" value="${token}"/>
+        <property name="clientService" ref="httpClientService"/>
     </bean>
 
-    <bean id = "cacheConfig" class="com.u51.a_little_more.cache.ChannelCache"/>
+    <!-- bean id = "cacheConfig" class="com.u51.a_little_more.cache.ChannelCache"/>
 
-    <bean id = "contextUtil" class="com.u51.a_little_more.util.SpringContextUtil" depends-on="cacheConfig" />
+    <bean id = "contextUtil" class="com.u51.a_little_more.util.SpringContextUtil" depends-on="cacheConfig" / -->
+
+    <bean id = "httpClientConnectionManager" class="org.apache.http.impl.conn.PoolingHttpClientConnectionManager" destroy-method="close">
+        <property name="maxTotal" value="${http.maxTotal}"/>
+        <property name="defaultMaxPerRoute" value="${http.defaultMaxPerRoute}"/>
+    </bean>
+
+    <bean id="httpClientBuilder" class="org.apache.http.impl.client.HttpClientBuilder">
+        <property name="connectionManager" ref="httpClientConnectionManager"/>
+    </bean>
+
+    <bean id="httpClient" class="org.apache.http.impl.client.CloseableHttpClient" factory-bean="httpClientBuilder" factory-method="build" scope="prototype"/>
+
+    <bean class="com.u51.a_little_more.thread.IdleConnectionEvictor" destroy-method="shutdown">
+        <constructor-arg index="0" ref="httpClientConnectionManager"/>
+    </bean>
+
+    <bean id = "requestConfigBuilder" class="org.apache.http.client.config.RequestConfig.Builder">
+        <!-- 创建连接的最长时间 -->
+        <property name="connectTimeout" value="${http.connectTimeout}"/>
+        <!-- 从连接池中获取到连接的最长时间 -->
+        <property name="connectionRequestTimeout" value="${http.connectionRequestTimeout}"/>
+        <!-- 数据传输的最长时间 -->
+        <property name="socketTimeout" value="${http.socketTimeout}"/>
+    </bean>
+
+    <bean id="requestConfig" class="org.apache.http.client.config.RequestConfig" factory-bean="requestConfigBuilder" factory-method="build">
+    </bean>
 
 </beans>

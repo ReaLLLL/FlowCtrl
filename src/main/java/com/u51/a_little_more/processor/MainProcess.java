@@ -6,14 +6,8 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.u51.a_little_more.dataObject.FundChannel;
 import com.u51.a_little_more.thread.RequestGenRunnable;
 import com.u51.a_little_more.thread.RequestSendRunnable;
+import com.u51.a_little_more.util.HttpClientService;
 import com.u51.a_little_more.util.HttpUtil;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -35,18 +29,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Configuration
 public class MainProcess implements InitializingBean {
-    private static CloseableHttpClient httpClient;
-
-    static {
-        Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("http", new PlainConnectionSocketFactory())
-                .build();
-        PoolingHttpClientConnectionManager cm =new PoolingHttpClientConnectionManager(socketFactoryRegistry);
-        cm.setMaxTotal(500);
-        cm.setDefaultMaxPerRoute(50);
-
-        httpClient = HttpClients.custom().setConnectionManager(cm).build();
-    }
 
     private ThreadPoolTaskExecutor threadPoolForProcess;
 
@@ -55,6 +37,8 @@ public class MainProcess implements InitializingBean {
     private String startTime;
 
     private String token;
+
+    private HttpClientService clientService;
 
     public ThreadPoolTaskExecutor getThreadPoolForProcess() {
         return threadPoolForProcess;
@@ -88,6 +72,14 @@ public class MainProcess implements InitializingBean {
         this.token = token;
     }
 
+    public HttpClientService getClientService() {
+        return clientService;
+    }
+
+    public void setClientService(HttpClientService clientService) {
+        this.clientService = clientService;
+    }
+
     public void doProcess() throws Exception {
         System.out.println("===========主流程开始准备!!!===========");
 
@@ -95,12 +87,12 @@ public class MainProcess implements InitializingBean {
         long current = System.currentTimeMillis();
         long start = sdf.parse(this.getStartTime()).getTime();
 
-        ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(100));
-        BlockingQueue<String> queue = new ArrayBlockingQueue<>(100);
+        ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(400));
+        BlockingQueue<String> queue = new ArrayBlockingQueue<>(1000);
         Map<String, RateLimiter> rateMap = new HashMap<>();
         Map<String, AtomicInteger> statCount = new HashMap<>();
         Map<String, AtomicLong> statTime = new HashMap<>();
-        CountDownLatch count = new CountDownLatch(100);
+        CountDownLatch count = new CountDownLatch(500);
 
         for(int i = 1; i < 6; i++){
 
@@ -119,7 +111,7 @@ public class MainProcess implements InitializingBean {
 
         this.threadPoolForProcess.execute(new RequestGenRunnable(queue, this.requestTotalNum));
         for(int i = 0; i < 5; i++){
-            this.threadPoolForProcess.execute(new RequestSendRunnable(queue, rateMap, executorService, httpClient, token, statCount, statTime, count));
+            this.threadPoolForProcess.execute(new RequestSendRunnable(queue, rateMap, executorService, token, statCount, statTime, count, this.clientService));
         }
 
         System.out.println("===========开始渠道处理耗时采样!!!===========");
@@ -131,21 +123,19 @@ public class MainProcess implements InitializingBean {
             System.out.println("当前渠道编号：C"+i);
             System.out.println(" 总交易笔数："+ statCount.get("C"+i).get());
             System.out.println(" 总交易耗时："+ statTime.get("C"+i).get());
-            list.add(new FundChannel("C"+i, 7000+1000*i, statTime.get("C"+i).get()/statCount.get("C"+i).get(),"",1));
+            list.add(new FundChannel("C"+i, 1000*(7+i)*statCount.get("C"+i).get(), statTime.get("C"+i).get(),"",1));
         }
 
         HttpUtil.setChannelSample(false);
 
-        System.out.println(HttpUtil.getChannel());
+       // System.out.println(HttpUtil.getChannel());
         System.out.println("===========渠道处理耗时采样结束,开始更新缓存信息!!!===========");
         HttpUtil.resetChannel(list);
         List<String> l = HttpUtil.getChannel();
         for(String s : l){
-            System.out.println(s);
-            System.out.println(l.indexOf(s));
-            rateMap.get(s).setRate(1<<(4-l.indexOf(s))+4);
+            rateMap.get(s).setRate(20-l.indexOf(s)*2);
         }
-        System.out.println(HttpUtil.getChannel());
+        //System.out.println(HttpUtil.getChannel());
         System.out.println("===========更新缓存信息结束!!!===========");
 
         System.out.println("===========主流程处理结束!!!===========");

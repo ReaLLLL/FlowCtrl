@@ -11,22 +11,24 @@ import java.util.*;
  * @author alexsong
  * @version $Id: ChannelCache.java, v 0.1 2018年01月11日 下午5:20:20 alexsong Exp $
  */
-public class ChannelCache extends AbstractCache<String, Object> implements InitializingBean{
+public class ChannelCache extends AbstractCache<String, Object>{
     private static final String CHANNEL_INFO_KEY = "CHANNEL_INFO";
+    private static final String CHANNEL_AVAILABLE_KEY = "AVAILABLE_FLAG_";
     private static final String CHANNEL_DETECTIVE_KEY = "DETECTIVE_FLAG_";
     private static final String CHANNEL_SAMPLE_KEY = "CHANNEL_SAMPLE";
     private List<FundChannel> channelList;
     private Map<String, Boolean> channelAvailableMap;
+    private Map<String, Boolean> detectiveMap;
 
     protected Object loadData(String key){
         if(key.equals(CHANNEL_INFO_KEY)){
             Collections.sort(this.channelList, new Comparator<FundChannel>() {
                 @Override
                 public int compare(FundChannel o1, FundChannel o2) {
-                    if(o1.getPrior() >= o2.getPrior())
-                        return -1;
-                    else
+                    if(o1.getPrior() > o2.getPrior())
                         return 1;
+                    else
+                        return -1;
                 }
             });
 
@@ -34,21 +36,22 @@ public class ChannelCache extends AbstractCache<String, Object> implements Initi
             Iterator iter = channelList.iterator();
             while (iter.hasNext()){
                 FundChannel f = (FundChannel)iter.next();
-                if(this.channelAvailableMap.get(CHANNEL_DETECTIVE_KEY+f.getId()))
+                if(this.channelAvailableMap.get(CHANNEL_AVAILABLE_KEY+f.getId()))
                     list.add(f.getId());
             }
 
             return list;
-        }else if(key.startsWith(CHANNEL_DETECTIVE_KEY)){
+        }else if(key.startsWith(CHANNEL_AVAILABLE_KEY)){
             return this.channelAvailableMap.get(key);
+        } else if(key.startsWith(CHANNEL_DETECTIVE_KEY)){
+            return this.detectiveMap.get(key);
         }else if(key.equals(CHANNEL_SAMPLE_KEY))
             return false;
         else
             return null;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    public void init() {
 
         this.channelList = new ArrayList<>(5);
         this.channelList.add(new FundChannel("C1",8000,1000,"200",1));
@@ -59,30 +62,45 @@ public class ChannelCache extends AbstractCache<String, Object> implements Initi
 
 
         this.channelAvailableMap = new HashMap<>(5);
-        this.channelAvailableMap.put("DETECTIVE_FLAG_C1", true);
-        this.channelAvailableMap.put("DETECTIVE_FLAG_C2", true);
-        this.channelAvailableMap.put("DETECTIVE_FLAG_C3", true);
-        this.channelAvailableMap.put("DETECTIVE_FLAG_C4", true);
-        this.channelAvailableMap.put("DETECTIVE_FLAG_C5", true);
+        this.channelAvailableMap.put("AVAILABLE_FLAG_C1", true);
+        this.channelAvailableMap.put("AVAILABLE_FLAG_C2", true);
+        this.channelAvailableMap.put("AVAILABLE_FLAG_C3", true);
+        this.channelAvailableMap.put("AVAILABLE_FLAG_C4", true);
+        this.channelAvailableMap.put("AVAILABLE_FLAG_C5", true);
+
+        this.detectiveMap = new HashMap<>(5);
+        this.detectiveMap.put("DETECTIVE_FLAG_C1", true);
+        this.detectiveMap.put("DETECTIVE_FLAG_C2", true);
+        this.detectiveMap.put("DETECTIVE_FLAG_C3", true);
+        this.detectiveMap.put("DETECTIVE_FLAG_C4", true);
+        this.detectiveMap.put("DETECTIVE_FLAG_C5", true);
 
         refresh(CHANNEL_INFO_KEY);
+        refresh("AVAILABLE_FLAG_C1");
+        refresh("AVAILABLE_FLAG_C2");
+        refresh("AVAILABLE_FLAG_C3");
+        refresh("AVAILABLE_FLAG_C4");
+        refresh("AVAILABLE_FLAG_C5");
+
         refresh("DETECTIVE_FLAG_C1");
         refresh("DETECTIVE_FLAG_C2");
         refresh("DETECTIVE_FLAG_C3");
         refresh("DETECTIVE_FLAG_C4");
         refresh("DETECTIVE_FLAG_C5");
+
         refresh(CHANNEL_SAMPLE_KEY);
     }
 
     public void updateChannelState(String channel, boolean state){
-        this.channelAvailableMap.put(CHANNEL_DETECTIVE_KEY+channel, state);
+        this.channelAvailableMap.put(CHANNEL_AVAILABLE_KEY+channel, state);
+        this.detectiveMap.put(CHANNEL_DETECTIVE_KEY+channel, state);
     }
     //返回采样数据信息
     public void resetChannelList(List<FundChannel> SampleList){
         this.channelList.clear();
         this.channelList.addAll(SampleList);
         for(FundChannel f : this.channelList){
-            f.setPrior((int)(50-30*f.getMark()/f.getTime()));
+            f.setPrior((int)(f.getMark()/f.getTime()));
             System.out.println(f.toString());
         }
     }

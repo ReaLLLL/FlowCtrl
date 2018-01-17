@@ -25,7 +25,7 @@ public class RequestGenRunnable implements Runnable{
         for(int i = 1; i < this.num+1; i++){
             try {
                 this.queue.put(String.valueOf(i));
-                Thread.sleep(10);
+                Thread.sleep(5);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -35,7 +35,7 @@ public class RequestGenRunnable implements Runnable{
 
         while(true){
             int size = this.queue.size();
-            System.out.print("当前剩余待发送请求数量：" + size);
+            System.out.println("当前剩余待发送请求数量：" + size);
 
             if(size == 0)
                 break;
