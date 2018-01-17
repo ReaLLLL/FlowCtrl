@@ -93,7 +93,6 @@ public class RequestSendRunnable implements Runnable {
                 //已获取令牌；
                 final ListenableFuture<OutBoundResult> listenableFuture = this.executorService.submit(new OutBoundCallable(channel, ele, limiterList.get(channel), this.token, this.clientService));
                 Futures.addCallback(listenableFuture, new FutureCallback<OutBoundResult>() {
-                    private HttpClient client = HttpClients.createDefault();
                     @Override
                     public void onSuccess(OutBoundResult result) {
                         OutBoundStateEnum state = result.getState();
@@ -109,7 +108,7 @@ public class RequestSendRunnable implements Runnable {
                             case FAILURE:
                                 //置渠道不可用，开始心跳检测；
                                 if(HttpUtil.setChannelState(channel, false))
-                                    new Thread(new DetectiveThread(this.client, channel, result.getReqNo(), token)).start();
+                                    new Thread(new DetectiveThread(clientService, channel, result.getReqNo(), token)).start();
                                 else {
                                     try {
                                         System.out.println("将此请求再次放入请求队列，重新路由");

@@ -2,6 +2,7 @@ package com.u51.a_little_more.thread;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.u51.a_little_more.dataObject.OutBoundStateEnum;
+import com.u51.a_little_more.util.HttpClientService;
 import com.u51.a_little_more.util.HttpUtil;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -20,12 +21,12 @@ import java.util.Random;
  */
 public class DetectiveThread implements Runnable{
 
-    private HttpClient client;
+    private HttpClientService client;
     private String channel;
     private String reqNo;
     private String token;
 
-    public DetectiveThread(HttpClient client, String channel, String reqNo, String token) {
+    public DetectiveThread(HttpClientService client, String channel, String reqNo, String token) {
         this.client = client;
         this.channel = channel;
         this.reqNo = reqNo;
@@ -34,19 +35,16 @@ public class DetectiveThread implements Runnable{
 
     @Override
     public void run() {
-        int interval = 32;
+        int interval = 16;
         while(true){
             try {
                 System.out.println("当前渠道通讯异常，渠道号："+this.channel +"\n检测线程开始工作，线程号："+Thread.currentThread().getName()+"\n间隔："+interval);
 
                 Thread.sleep(interval*1000);
                 String url = HttpUtil.buildUrl(this.channel, this.reqNo, this.token);
-                HttpGet httpGet = new HttpGet(url);
-                RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
-                httpGet.setConfig(requestConfig);
-                HttpResponse response = this.client.execute(httpGet);
+                String response = this.client.doGet(url);
 
-                if(response == null || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK)
+                if(response == null || response.length()>6)
                     interval = interval > 5 ? interval/2 : 2;
                 else{
                     System.out.println("当前渠道已恢复，渠道编号："+channel);
