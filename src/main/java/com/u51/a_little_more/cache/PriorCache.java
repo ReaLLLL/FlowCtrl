@@ -17,7 +17,6 @@ public class PriorCache extends AbstractCache<String, List<FundChannel>> impleme
         private volatile Map<String, FundChannel> cacheMap;
 
         protected List<FundChannel> loadData(String K){
-            System.out.println("创建缓存信息");
             if(!K.equals(KEY))
                 return null;
 
@@ -30,12 +29,6 @@ public class PriorCache extends AbstractCache<String, List<FundChannel>> impleme
 
         @Override
         public void afterPropertiesSet() throws Exception {
-//            this.cacheMap = new HashMap<>(5);
-//            this.cacheMap.put("0", 0);
-//            this.cacheMap.put("1", 1);
-//            this.cacheMap.put("2", 2);
-//            this.cacheMap.put("3", 3);
-//            this.cacheMap.put("4", 4);
 
             refresh(KEY);
         }

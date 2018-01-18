@@ -8,6 +8,8 @@ import com.u51.a_little_more.thread.RequestGenRunnable;
 import com.u51.a_little_more.thread.RequestSendRunnable;
 import com.u51.a_little_more.util.HttpClientService;
 import com.u51.a_little_more.util.HttpUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -29,6 +31,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Configuration
 public class MainProcess implements InitializingBean {
+
+    private static final Logger log = LoggerFactory.getLogger(MainProcess.class);
 
     private ThreadPoolTaskExecutor threadPoolForProcess;
 
@@ -81,8 +85,8 @@ public class MainProcess implements InitializingBean {
     }
 
     public void doProcess() throws Exception {
-        System.out.println("===========主流程开始准备!!!===========");
 
+        log.info("===========主流程开始准备!!!===========");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         long current = System.currentTimeMillis();
         long start = sdf.parse(this.getStartTime()).getTime();
@@ -102,43 +106,41 @@ public class MainProcess implements InitializingBean {
         }
 
         while (current < start){
-            System.out.println("倒计时："+(start-current)/1000);
+            log.info("倒计时：{}", (start-current)/1000);
             Thread.sleep(1000);
             current = System.currentTimeMillis();
         }
 
-        System.out.println("===========Let's go!!!=============");
+        log.info("===========Let's go!!!=============");
 
         this.threadPoolForProcess.execute(new RequestGenRunnable(queue, this.requestTotalNum));
         for(int i = 0; i < 5; i++){
             this.threadPoolForProcess.execute(new RequestSendRunnable(queue, rateMap, executorService, token, statCount, statTime, count, this.clientService));
         }
 
-        System.out.println("===========开始渠道处理耗时采样!!!===========");
+        log.info("===========开始渠道处理耗时采样!!!===========");
+
         HttpUtil.setChannelSample(true);
 
         count.await();
         List<FundChannel> list = new ArrayList<>();
         for(int i = 1; i<6; i++){
-            System.out.println("当前渠道编号：C"+i);
-            System.out.println(" 总交易笔数："+ statCount.get("C"+i).get());
-            System.out.println(" 总交易耗时："+ statTime.get("C"+i).get());
+            log.info("当前渠道编号:{}, 请求总笔数:{}, 请求总耗时:{}",i,statCount.get("C"+i).get(),statTime.get("C"+i).get());
             list.add(new FundChannel("C"+i, 1000*(7+i)*statCount.get("C"+i).get(), statTime.get("C"+i).get(),"",1));
         }
 
         HttpUtil.setChannelSample(false);
 
-       // System.out.println(HttpUtil.getChannel());
-        System.out.println("===========渠道处理耗时采样结束,开始更新缓存信息!!!===========");
+        log.info("===========渠道处理耗时采样结束,开始更新缓存信息!!!===========");
+
         HttpUtil.resetChannel(list);
         List<String> l = HttpUtil.getChannel();
         for(String s : l){
-            rateMap.get(s).setRate(20-l.indexOf(s)*2);
+            rateMap.get(s).setRate(20-l.indexOf(s)*3);
         }
-        //System.out.println(HttpUtil.getChannel());
-        System.out.println("===========更新缓存信息结束!!!===========");
 
-        System.out.println("===========主流程处理结束!!!===========");
+        log.info("===========更新缓存信息结束!!!===========");
+        log.info("============主流程处理结束!!!============");
     }
 
     @Override

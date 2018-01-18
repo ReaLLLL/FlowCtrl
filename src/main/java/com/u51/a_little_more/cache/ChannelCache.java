@@ -1,6 +1,8 @@
 package com.u51.a_little_more.cache;
 
 import com.u51.a_little_more.dataObject.FundChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.util.*;
@@ -12,6 +14,7 @@ import java.util.*;
  * @version $Id: ChannelCache.java, v 0.1 2018年01月11日 下午5:20:20 alexsong Exp $
  */
 public class ChannelCache extends AbstractCache<String, Object>{
+    private static final Logger log = LoggerFactory.getLogger(ChannelCache.class);
     private static final String CHANNEL_INFO_KEY = "CHANNEL_INFO";
     private static final String CHANNEL_AVAILABLE_KEY = "AVAILABLE_FLAG_";
     private static final String CHANNEL_DETECTIVE_KEY = "DETECTIVE_FLAG_";
@@ -100,8 +103,10 @@ public class ChannelCache extends AbstractCache<String, Object>{
         this.channelList.clear();
         this.channelList.addAll(SampleList);
         for(FundChannel f : this.channelList){
-            f.setPrior((int)(f.getMark()/f.getTime()));
-            System.out.println(f.toString());
+            int i = this.channelList.indexOf(f);
+            double prior = Math.exp(-i/5)*f.getMark()/f.getTime();
+            f.setPrior(prior);
+            log.info(f.toString());
         }
     }
 }

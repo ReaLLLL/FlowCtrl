@@ -1,5 +1,8 @@
 package com.u51.a_little_more.thread;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -10,6 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @version $Id: RequestGenRunnable.java, v 0.1 2018年01月09日 下午5:54:54 alexsong Exp $
  */
 public class RequestGenRunnable implements Runnable{
+    private static final Logger log = LoggerFactory.getLogger(RequestGenRunnable.class);
 
     private BlockingQueue<String> queue;
 
@@ -27,15 +31,15 @@ public class RequestGenRunnable implements Runnable{
                 this.queue.put(String.valueOf(i));
                 Thread.sleep(5);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("请求生成线程异常中断", e);
             }
         }
 
-        System.out.print("请求生成完毕");
+        log.info("=======请求生成完毕=======");
 
         while(true){
             int size = this.queue.size();
-            System.out.println("当前剩余待发送请求数量：" + size);
+            log.info("当前剩余待发送请求数量:{}",size);
 
             if(size == 0)
                 break;
@@ -43,7 +47,7 @@ public class RequestGenRunnable implements Runnable{
                 try {
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.error("请求生成线程异常中断", e);
                 }
             }
         }

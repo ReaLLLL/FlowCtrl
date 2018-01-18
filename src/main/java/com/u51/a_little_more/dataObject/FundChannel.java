@@ -21,13 +21,13 @@ public class FundChannel implements Serializable, Comparable<FundChannel>{
     private String state;
 
     /**优先级*/
-    private int prior;
+    private double prior;
 
 //    /**维护时间 总渠道维护不超过10分钟*/
 //    private String restTime;
 
 
-    public FundChannel(String id, long mark, long time, String state, int prior) {
+    public FundChannel(String id, long mark, long time, String state, double prior) {
         Id = id;
         this.mark = mark;
         this.time = time;
@@ -67,24 +67,17 @@ public class FundChannel implements Serializable, Comparable<FundChannel>{
         this.state = state;
     }
 
-    public int getPrior() {
+    public double getPrior() {
         return prior;
     }
 
-    public void setPrior(int prior) {
+    public void setPrior(double prior) {
         this.prior = prior;
     }
 
     @Override
     public int compareTo(FundChannel o) {
         // 按照优先级排序
-        /*if (this.prior < o.getPrior()) {
-            return (int)(Math.ceil(this.prior - o.getPrior()));
-        }
-        if (this.prior > o.getPrior()) {
-            return (int)(Math.ceil(this.prior - o.getPrior()));
-        }
-        return 0;*/
         return -(int)(Math.ceil(this.prior - o.getPrior()));
     }
 
@@ -92,9 +85,8 @@ public class FundChannel implements Serializable, Comparable<FundChannel>{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("当前渠道：").append(this.Id)
-                .append(" 分数：").append(this.mark)
-                .append(" 平均耗时：").append(this.time)
-                .append(" 当前状态：").append(this.state)
+                .append(" 总得分：").append(this.mark)
+                .append(" 总耗时：").append(this.time)
                 .append(" 优先级：").append(this.prior);
 
         return sb.toString();

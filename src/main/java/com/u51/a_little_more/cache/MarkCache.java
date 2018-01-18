@@ -1,6 +1,5 @@
 package com.u51.a_little_more.cache;
 
-import com.u51.a_little_more.dataObject.FundChannel;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.util.*;
@@ -17,7 +16,6 @@ public class MarkCache extends AbstractCache<String, Map<String,Integer>> implem
     private volatile Map<String, Integer> cacheMap;
 
     protected Map<String,Integer> loadData(String K){
-        System.out.println("创建缓存信息");
         if(!K.equals(KEY))
             return null;
 
@@ -30,12 +28,6 @@ public class MarkCache extends AbstractCache<String, Map<String,Integer>> implem
 
     @Override
     public void afterPropertiesSet() throws Exception {
-//        this.cacheMap = new HashMap<>(5);
-//        this.cacheMap.put("0", new FundChannel("C1","50000","1","1",100));
-//        this.cacheMap.put("1", new FundChannel("C1","50000","1","1",100));
-//        this.cacheMap.put("2", new FundChannel("C1","50000","1","1",100));
-//        this.cacheMap.put("3", new FundChannel("C1","50000","1","1",100));
-//        this.cacheMap.put("4", new FundChannel("C1","50000","1","1",100));
 
         refresh(KEY);
     }

@@ -5,7 +5,7 @@
 
 	<groupId>com.u51.a_little_more</groupId>
 	<artifactId>A_Little_More</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.0.FINAL</version>
 	<packaging>jar</packaging>
 
 	<name>DuoYiDian</name>

@@ -15,35 +15,34 @@ import java.util.Map;
  * @version $Id: HttpUtil.java, v 0.1 2018年01月09日 下午9:49:49 alexsong Exp $
  */
 public class HttpUtil {
-    private static Map<Integer, String> url = new HashMap<>();
+    private static Map<String, String> url = new HashMap<>();
     private static ChannelCache cache = new ChannelCache();
 
     static {
-        url.put(1, "http://10.6.20.67:8081/hello/c1");
-        url.put(2, "http://10.6.20.67:8081/hello/c2");
-        url.put(3, "http://10.6.20.67:8081/hello/c3");
-        url.put(4, "http://10.6.20.67:8081/hello/c4");
-        url.put(5, "http://10.6.20.67:8081/hello/c5");
+//        url.put(1, "http://10.6.20.67:8081/hello/c1");
+//        url.put(2, "http://10.6.20.67:8081/hello/c2");
+//        url.put(3, "http://10.6.20.67:8081/hello/c3");
+//        url.put(4, "http://10.6.20.67:8081/hello/c4");
+//        url.put(5, "http://10.6.20.67:8081/hello/c5");
 
-//        url.put(1, "http://10.6.200.56:8081/");
-//        url.put(2, "http://10.6.200.56:8081/");
-//        url.put(3, "http://10.6.200.56:8081/");
-//        url.put(4, "http://10.6.200.56:8081/");
-//        url.put(5, "http://10.6.200.56:8081/");
+//        url.put(1, "http://192.168.1.4:8081/");
+//        url.put(2, "http://192.168.1.4:8082/");
+//        url.put(3, "http://192.168.1.4:8083/");
+//        url.put(4, "http://192.168.1.4:8084/");
+//        url.put(5, "http://192.168.1.4:8085/");
 
-//        url.put(1, "http://test.hello51world.yacolpay.com/ccmchannel2/");
-//        url.put(2, "http://test.hello51world.yacolpay.com/ccmchannel2/");
-//        url.put(3, "http://test.hello51world.yacolpay.com/ccmchannel3/");
-//        url.put(4, "http://test.hello51world.yacolpay.com/ccmchannel4/");
-//        url.put(5, "http://test.hello51world.yacolpay.com/ccmchannel5/");
+        url.put("C1", "http://cc.intra.yacolpay.com/c1/apply.htm?");
+        url.put("C2", "http://cc.intra.yacolpay.com/c1/apply.htm?");
+        url.put("C3", "http://test.hello51world.yacolpay.com/ccmchannel3/");
+        url.put("C4", "http://test.hello51world.yacolpay.com/ccmchannel4/");
+        url.put("C5", "http://test.hello51world.yacolpay.com/ccmchannel5/");
 
         cache.init();
     }
     //生成请求url
     public static String buildUrl(String channelNo, String reqNo, String token){
         //return "http://cc.intra.yacolpay.com/"+channelNo+"/apply.htm?reqNo="+reqNo+"&token="+token;
-        int c = channelNo.charAt(1)-48;
-        return url.get(c)+"?reqNo="+reqNo+"&token="+token;
+        return url.get(channelNo)+"?reqNo="+reqNo+"&token="+token;
         //return url.get(c)+"/apply.htm?reqNo="+reqNo+"&token="+token;
     }
 

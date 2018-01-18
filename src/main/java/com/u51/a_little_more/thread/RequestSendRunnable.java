@@ -5,8 +5,8 @@ import com.u51.a_little_more.dataObject.OutBoundResult;
 import com.u51.a_little_more.dataObject.OutBoundStateEnum;
 import com.u51.a_little_more.util.HttpClientService;
 import com.u51.a_little_more.util.HttpUtil;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * @version $Id: RequestSendRunnable.java, v 0.1 2018年01月09日 下午6:05:05 alexsong Exp $
  */
 public class RequestSendRunnable implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(RequestSendRunnable.class);
+
     private BlockingQueue<String> queue;
 
     private Map<String, RateLimiter> limiterList;
@@ -99,22 +101,25 @@ public class RequestSendRunnable implements Runnable {
                         String channel = result.getChannel();
                         double i = 0.0;
                         switch (state){
-                            case TIMEOUT:
+                            case UNKNOWN:
                                 //调低优先级，降低流速
-                                System.out.println("当前请求超时，开始降低流速。渠道编号："+channel);
+                                log.info("当前请求超时，开始降低流速，渠道编号：{}", channel);
                                 i= result.getLimiter().getRate();
                                 result.getLimiter().setRate(i/20.0);
                                 break;
-                            case FAILURE:
+                            case DUPLICATE_REQUEST:
+                            case INVALID_REQUEST:
+                            case SERVICE_REJECT:
+                            case SERVICE_BUSY:
                                 //置渠道不可用，开始心跳检测；
                                 if(HttpUtil.setChannelState(channel, false))
                                     new Thread(new DetectiveThread(clientService, channel, result.getReqNo(), token)).start();
                                 else {
                                     try {
-                                        System.out.println("将此请求再次放入请求队列，重新路由");
+                                        log.info("将此请求再次放入请求队列，重新路由。");
                                         queue.put(result.getReqNo());
                                     } catch (InterruptedException e) {
-                                        e.printStackTrace();
+                                        log.error("重置请求被中断",e);
                                     }
                                 }
                                 break;
@@ -125,7 +130,7 @@ public class RequestSendRunnable implements Runnable {
                                     statTime.get(channel).addAndGet(result.getTime());
                                 }
                                 if(result.getLimiter().getRate() <2) {
-                                    System.out.println("当前渠道恢复流速，渠道编号："+channel);
+                                    log.info("当前渠道恢复流速，渠道编号：{}", channel);
                                     i = result.getLimiter().getRate();
                                     result.getLimiter().setRate(i*20.0);
                                 }
@@ -135,7 +140,7 @@ public class RequestSendRunnable implements Runnable {
                                 try {
                                     queue.put(result.getReqNo());
                                 } catch (InterruptedException e) {
-                                    e.printStackTrace();
+                                    log.error("重置请求被中断",e);
                                 }
                                 break;
                             default:
@@ -146,11 +151,11 @@ public class RequestSendRunnable implements Runnable {
 
                     @Override
                     public void onFailure(Throwable t) {
-                        t.printStackTrace();
+                        log.error("异步请求远程服务失败", t);
                     }
                 });
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (InterruptedException e) {
+                log.error("请求路由线程异常中断", e);
             }
         }
     }

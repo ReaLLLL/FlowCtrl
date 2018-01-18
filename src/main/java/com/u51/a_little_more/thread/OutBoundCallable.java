@@ -38,29 +38,22 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
         OutBoundResult result = new OutBoundResult();
         if(!HttpUtil.isChannelAvailable(this.channel)){
             //路由时渠道可用，实际发送时不可用
-//            System.out.print("当前渠道不可用，渠道编号："+this.channel+" 请求编号："+this.reqNo);
             result.setState(OutBoundStateEnum.OTHER);
         }else {
             String url = HttpUtil.buildUrl(this.channel, this.reqNo, this.token);
 
             long start = System.currentTimeMillis();
-            String response = clientService.doGet(url);
+            //result = clientService.doGet(url);
+            result = clientService.doGetForTest(url);
             long end = System.currentTimeMillis();
 
-            if(response == null)
-                result.setState(OutBoundStateEnum.TIMEOUT);
-            else if(response.length()>6)
-                result.setState(OutBoundStateEnum.FAILURE);
-            else
-                result.setState(OutBoundStateEnum.SUCCESS);
-
-            result.setTime(end - start);
-            //System.out.println("请求url："+url +" 耗时："+result.getTime());
+            if(result == null)
+                result.setState(OutBoundStateEnum.UNKNOWN);
+            else {
+                if(result.getState().equals(OutBoundStateEnum.SUCCESS))
+                    result.setTime(end-start);
+            }
         }
-
-//        int c = this.channel.charAt(1)-48;
-//        Thread.sleep(800+100*c);
-//        result.setState(OutBoundStateEnum.SUCCESS);
         result.setReqNo(this.reqNo);
         result.setChannel(this.channel);
         result.setLimiter(this.limiter);
