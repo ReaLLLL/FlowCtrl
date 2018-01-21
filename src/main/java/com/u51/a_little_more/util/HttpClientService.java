@@ -7,6 +7,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +62,8 @@ public class HttpClientService {
             response = httpClient.execute(httpGet);
 
             if (response != null) {
-                int code = response.getStatusLine().getStatusCode();
+                //int code = response.getStatusLine().getStatusCode();
+                int code = Integer.valueOf(EntityUtils.toString(response.getEntity()));
                 switch (code){
                     case 200:
                         result.setState(OutBoundStateEnum.SUCCESS);
@@ -106,7 +108,7 @@ public class HttpClientService {
         Random rand = new Random();
         int s = rand.nextInt(3)+3;
         try{
-            Thread.sleep(s * 1000);
+            Thread.sleep(3 * 1000);
         }catch (InterruptedException e){
             log.error("线程中断", e);
         }

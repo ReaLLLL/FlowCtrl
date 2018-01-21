@@ -1,5 +1,6 @@
 package com.u51.a_little_more.util;
 
+import com.google.common.util.concurrent.RateLimiter;
 import com.u51.a_little_more.dataObject.FundChannel;
 import com.u51.a_little_more.cache.ChannelCache;
 
@@ -19,30 +20,30 @@ public class HttpUtil {
     private static ChannelCache cache = new ChannelCache();
 
     static {
-//        url.put(1, "http://10.6.20.67:8081/hello/c1");
-//        url.put(2, "http://10.6.20.67:8081/hello/c2");
-//        url.put(3, "http://10.6.20.67:8081/hello/c3");
-//        url.put(4, "http://10.6.20.67:8081/hello/c4");
-//        url.put(5, "http://10.6.20.67:8081/hello/c5");
+//        url.put("C1", "http://10.6.20.67:8081/hello/c1");
+//        url.put("C2", "http://10.6.20.67:8081/hello/c2");
+//        url.put("C3", "http://10.6.20.67:8081/hello/c3");
+//        url.put("C4", "http://10.6.20.67:8081/hello/c4");
+//        url.put("C5", "http://10.6.20.67:8081/hello/c5");
 
-//        url.put(1, "http://192.168.1.4:8081/");
-//        url.put(2, "http://192.168.1.4:8082/");
-//        url.put(3, "http://192.168.1.4:8083/");
-//        url.put(4, "http://192.168.1.4:8084/");
-//        url.put(5, "http://192.168.1.4:8085/");
+        url.put("C1", "http://192.168.1.4:8081/");
+        url.put("C2", "http://192.168.1.4:8082/");
+        url.put("C3", "http://192.168.1.4:8083/");
+        url.put("C4", "http://192.168.1.4:8084/");
+        url.put("C5", "http://192.168.1.4:8085/");
 
-        url.put("C1", "http://cc.intra.yacolpay.com/c1/apply.htm?");
-        url.put("C2", "http://cc.intra.yacolpay.com/c1/apply.htm?");
-        url.put("C3", "http://test.hello51world.yacolpay.com/ccmchannel3/");
-        url.put("C4", "http://test.hello51world.yacolpay.com/ccmchannel4/");
-        url.put("C5", "http://test.hello51world.yacolpay.com/ccmchannel5/");
+//        url.put("C1", "http://cc.intra.yacolpay.com/c1/apply.htm?");
+//        url.put("C2", "http://cc.intra.yacolpay.com/c1/apply.htm?");
+//        url.put("C3", "http://test.hello51world.yacolpay.com/ccmchannel3/");
+//        url.put("C4", "http://test.hello51world.yacolpay.com/ccmchannel4/");
+//        url.put("C5", "http://test.hello51world.yacolpay.com/ccmchannel5/");
 
         cache.init();
     }
     //生成请求url
     public static String buildUrl(String channelNo, String reqNo, String token){
         //return "http://cc.intra.yacolpay.com/"+channelNo+"/apply.htm?reqNo="+reqNo+"&token="+token;
-        return url.get(channelNo)+"?reqNo="+reqNo+"&token="+token;
+        return url.get(channelNo)+"index.htm?reqNo="+reqNo+"&token="+token;
         //return url.get(c)+"/apply.htm?reqNo="+reqNo+"&token="+token;
     }
 
@@ -53,10 +54,26 @@ public class HttpUtil {
 
 
     //更新渠道可用信息
-    public static boolean setChannelState(String channel, boolean state) {
+    public static boolean setChannelState(String channel, boolean state, Map<String, RateLimiter> limiterList) {
         if(isChannelAvailable(channel) == !state){
-            synchronized (channel){
+            synchronized (HttpUtil.class){
                 if(isChannelAvailable(channel) == !state){
+                    if(!state){
+                        //渠道不可用时的调整
+                        if("C4".equals(channel) || "C5".equals(channel)){
+                            limiterList.get("C1").setRate(limiterList.get("C1").getRate()+5.0);
+                            limiterList.get("C2").setRate(limiterList.get("C2").getRate()+2.5);
+                            limiterList.get("C3").setRate(limiterList.get("C3").getRate()+2.5);
+                        }
+
+                    }else {
+                        //渠道恢复时的调整
+                        if("C4".equals(channel) || "C5".equals(channel)){
+                            limiterList.get("C1").setRate(limiterList.get("C1").getRate()-5.0);
+                            limiterList.get("C2").setRate(limiterList.get("C2").getRate()-2.5);
+                            limiterList.get("C3").setRate(limiterList.get("C3").getRate()-2.5);
+                        }
+                    }
                     cache.updateChannelState(channel, state);
                     cache.remove("CHANNEL_INFO");
                     cache.remove("AVAILABLE_FLAG_"+channel);

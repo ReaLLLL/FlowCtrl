@@ -37,9 +37,27 @@ public class ChannelCache extends AbstractCache<String, Object>{
 
             List<String> list = new ArrayList<>();
             Iterator iter = channelList.iterator();
+
+            //设定优先级。4、5两个渠道只要可用优先发送
+            if(this.channelAvailableMap.get("AVAILABLE_FLAG_C5")){
+                list.add("C5");
+            }
+            if(this.channelAvailableMap.get("AVAILABLE_FLAG_C4")){
+                list.add("C4");
+            }
+//            if(this.channelAvailableMap.get("C1")){
+//                list.add("C1");
+//            }
+//            if(this.channelAvailableMap.get("C2")){
+//                list.add("C2");
+//            }
+//            if(this.channelAvailableMap.get("C3")){
+//                list.add("C3");
+//            }
+
             while (iter.hasNext()){
                 FundChannel f = (FundChannel)iter.next();
-                if(this.channelAvailableMap.get(CHANNEL_AVAILABLE_KEY+f.getId()))
+                if(!f.getId().equals("C5") && !f.getId().equals("C4") && this.channelAvailableMap.get(CHANNEL_AVAILABLE_KEY+f.getId()))
                     list.add(f.getId());
             }
 
@@ -57,11 +75,11 @@ public class ChannelCache extends AbstractCache<String, Object>{
     public void init() {
 
         this.channelList = new ArrayList<>(5);
-        this.channelList.add(new FundChannel("C1",8000,1000,"200",1));
-        this.channelList.add(new FundChannel("C2",9000,1000,"200",2));
+        this.channelList.add(new FundChannel("C1",8000,1000,"200",5));
+        this.channelList.add(new FundChannel("C2",9000,1000,"200",4));
         this.channelList.add(new FundChannel("C3",10000,1000,"200",3));
-        this.channelList.add(new FundChannel("C4",11000,1000,"200",4));
-        this.channelList.add(new FundChannel("C5",12000,1000,"200",5));
+        this.channelList.add(new FundChannel("C4",11000,1000,"200",2));
+        this.channelList.add(new FundChannel("C5",12000,1000,"200",1));
 
 
         this.channelAvailableMap = new HashMap<>(5);
@@ -104,7 +122,8 @@ public class ChannelCache extends AbstractCache<String, Object>{
         this.channelList.addAll(SampleList);
         for(FundChannel f : this.channelList){
             int i = this.channelList.indexOf(f);
-            double prior = Math.exp(-i/5)*f.getMark()/f.getTime();
+            //double prior = Math.exp(-i/5)*f.getMark()/f.getTime();
+            double prior = f.getMark()/f.getTime();
             f.setPrior(prior);
             log.info(f.toString());
         }

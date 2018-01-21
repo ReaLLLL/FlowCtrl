@@ -92,11 +92,11 @@ public class MainProcess implements InitializingBean {
         long start = sdf.parse(this.getStartTime()).getTime();
 
         ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(400));
-        BlockingQueue<String> queue = new ArrayBlockingQueue<>(1000);
+        BlockingQueue<String> queue = new LinkedBlockingQueue<>();
         Map<String, RateLimiter> rateMap = new HashMap<>();
         Map<String, AtomicInteger> statCount = new HashMap<>();
         Map<String, AtomicLong> statTime = new HashMap<>();
-        CountDownLatch count = new CountDownLatch(500);
+        CountDownLatch count = new CountDownLatch(3000);
 
         for(int i = 1; i < 6; i++){
 
@@ -121,6 +121,7 @@ public class MainProcess implements InitializingBean {
         log.info("===========开始渠道处理耗时采样!!!===========");
 
         HttpUtil.setChannelSample(true);
+        log.info("预先设定的优先级：{}", HttpUtil.getChannel());
 
         count.await();
         List<FundChannel> list = new ArrayList<>();
@@ -135,9 +136,14 @@ public class MainProcess implements InitializingBean {
 
         HttpUtil.resetChannel(list);
         List<String> l = HttpUtil.getChannel();
-        for(String s : l){
-            rateMap.get(s).setRate(20-l.indexOf(s)*3);
-        }
+
+        rateMap.get("C1").setRate(10.0);
+        rateMap.get("C2").setRate(15.0);
+        rateMap.get("C3").setRate(15.0);
+        rateMap.get("C4").setRate(20.0);
+        rateMap.get("C5").setRate(20.0);
+
+        log.info("重新设定的优先级：{}", l);
 
         log.info("===========更新缓存信息结束!!!===========");
         log.info("============主流程处理结束!!!============");

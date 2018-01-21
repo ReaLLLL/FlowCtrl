@@ -8,10 +8,10 @@ import com.u51.a_little_more.util.HttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -61,15 +61,17 @@ public class RequestSendRunnable implements Runnable {
             try {
                 //从待发送请求队列中取出请求信息
                 ele = this.queue.take();
-                boolean available = false;
                 String channel = "";
+                boolean available = false;
 
-                //先获取令牌再取渠道
                 while(true) {
-                    for(String s : this.limiterList.keySet()){
-                        if(HttpUtil.isChannelAvailable(s) && this.limiterList.get(s).tryAcquire()){
-                            available = true;
-                            channel = s;
+                    //获取此时最优渠道排序结果
+                    List<String> channelList = HttpUtil.getChannel();
+                    for(String c : channelList){
+                        //available = limiterList.get(c).tryAcquire(5, TimeUnit.MILLISECONDS);
+                        available = limiterList.get(c).tryAcquire();
+                        if(available){
+                            channel = c;
                             break;
                         }
                     }
@@ -77,19 +79,31 @@ public class RequestSendRunnable implements Runnable {
                         break;
                 }
 
-//                while(true) {
-//                    //获取此时最优渠道排序结果
-//                    List<String> channelList = HttpUtil.getChannel();
-//                    for(String c : channelList){
-//                        //available = limiterList.get(c).tryAcquire(5, TimeUnit.MILLISECONDS);
-//                        available = limiterList.get(c).tryAcquire();
-//                        if(available){
-//                            channel = c;
-//                            break;
+//                int idx = 0;
+//                if(HttpUtil.isNeedSample()){
+//                    idx = Integer.valueOf(ele)%5 + 1;
+//                    channel = "C"+idx;
+//                    this.limiterList.get(channel).acquire();
+//                }else {
+//                    idx = Integer.valueOf(ele)%5 + 1;
+//                    channel = "C"+idx;
+//
+//                    while (!HttpUtil.isChannelAvailable(channel) && !this.limiterList.get(channel).tryAcquire()){
+//                        //log.info("获取可用渠道列表开始，当前线程号：{}", Thread.currentThread().getName());
+//                        List<String> list = HttpUtil.getChannel();
+//                        //log.info("获取可用渠道列表结束，当前线程号：{}", Thread.currentThread().getName());
+//                        if(list.size() == 0){
+//                            log.error("当前无可用渠道");
+//                            Thread.sleep(2000);
+//                            continue;
+//                        }
+//
+//                        if(idx > list.size()){
+//                            idx = 1;
+//                        }else {
+//                            idx = (idx+1)%5+1;
 //                        }
 //                    }
-//                    if(available)
-//                        break;
 //                }
 
                 //已获取令牌；
@@ -108,12 +122,22 @@ public class RequestSendRunnable implements Runnable {
                                 result.getLimiter().setRate(i/20.0);
                                 break;
                             case DUPLICATE_REQUEST:
+                                log.error("当前请求重复，请求编号：{}", result.getReqNo());
+                                break;
                             case INVALID_REQUEST:
+                                log.error("当前请求无效，请求编号：{}", result.getReqNo());
+                                break;
                             case SERVICE_REJECT:
                             case SERVICE_BUSY:
+                                log.error("当前服务端不可用或者限流，请求编号：{}", result.getReqNo());
                                 //置渠道不可用，开始心跳检测；
-                                if(HttpUtil.setChannelState(channel, false))
-                                    new Thread(new DetectiveThread(clientService, channel, result.getReqNo(), token)).start();
+                                if(HttpUtil.setChannelState(channel, false, limiterList)) {
+                                    //动态调整优先级
+                                    for(String s: limiterList.keySet()){
+                                        log.info("当前渠道编号：{}，流速：{}",s, limiterList.get(s).getRate());
+                                    }
+                                    new Thread(new DetectiveThread(clientService, channel, result.getReqNo(), token, limiterList)).start();
+                                }
                                 else {
                                     try {
                                         log.info("将此请求再次放入请求队列，重新路由。");

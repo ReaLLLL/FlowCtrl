@@ -43,8 +43,8 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
             String url = HttpUtil.buildUrl(this.channel, this.reqNo, this.token);
 
             long start = System.currentTimeMillis();
-            //result = clientService.doGet(url);
-            result = clientService.doGetForTest(url);
+            result = clientService.doGet(url);
+            //result = clientService.doGetForTest(url);
             long end = System.currentTimeMillis();
 
             if(result == null)

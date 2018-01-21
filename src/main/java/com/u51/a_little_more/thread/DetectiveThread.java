@@ -14,6 +14,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -29,12 +30,14 @@ public class DetectiveThread implements Runnable{
     private String channel;
     private String reqNo;
     private String token;
+    private Map<String, RateLimiter> limiterList;
 
-    public DetectiveThread(HttpClientService client, String channel, String reqNo, String token) {
+    public DetectiveThread(HttpClientService client, String channel, String reqNo, String token, Map<String, RateLimiter> limiterList) {
         this.client = client;
         this.channel = channel;
         this.reqNo = reqNo;
         this.token = token;
+        this.limiterList = limiterList;
     }
 
     @Override
@@ -52,7 +55,10 @@ public class DetectiveThread implements Runnable{
                     interval = interval > 5 ? interval/2 : 2;
                 else{
                     log.info("当前渠道已恢复，渠道编号：{}", channel);
-                    HttpUtil.setChannelState(this.channel, true);
+                    HttpUtil.setChannelState(this.channel, true, this.limiterList);
+                    for(String s: limiterList.keySet()){
+                        log.info("当前渠道编号：{}，流速：{}",s, limiterList.get(s).getRate());
+                    }
                     break;
                 }
             }catch (InterruptedException e) {
