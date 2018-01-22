@@ -137,8 +137,8 @@ public class MainProcess implements InitializingBean {
         HttpUtil.resetChannel(list);
         List<String> l = HttpUtil.getChannel();
 
-        rateMap.get("C1").setRate(10.0);
-        rateMap.get("C2").setRate(15.0);
+        rateMap.get("C1").setRate(5.0);
+        rateMap.get("C2").setRate(10.0);
         rateMap.get("C3").setRate(15.0);
         rateMap.get("C4").setRate(20.0);
         rateMap.get("C5").setRate(20.0);

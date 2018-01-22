@@ -51,7 +51,7 @@ public class HttpClientService {
     }
 
     public OutBoundResult doGet(String url) {
-        // 创建http GET请求
+        log.info("请求URL：{}",url);
         HttpGet httpGet = new HttpGet(url);
         httpGet.setConfig(this.requestConfig);
 
@@ -62,8 +62,8 @@ public class HttpClientService {
             response = httpClient.execute(httpGet);
 
             if (response != null) {
-                //int code = response.getStatusLine().getStatusCode();
-                int code = Integer.valueOf(EntityUtils.toString(response.getEntity()));
+                int code = response.getStatusLine().getStatusCode();
+                //int code = Integer.valueOf(EntityUtils.toString(response.getEntity()));
                 switch (code){
                     case 200:
                         result.setState(OutBoundStateEnum.SUCCESS);

@@ -78,7 +78,20 @@ public class RequestSendRunnable implements Runnable {
                     if(available)
                         break;
                 }
+                //===================此处为快速方案====================
+//                while(true) {
+//                    for(String s : this.limiterList.keySet()){
+//                        if(HttpUtil.isChannelAvailable(s) && this.limiterList.get(s).tryAcquire()){
+//                            available = true;
+//                            channel = s;
+//                            break;
+//                        }
+//                    }
+//                    if(available)
+//                        break;
+//                }
 
+                //===================此处为备选方案====================
 //                int idx = 0;
 //                if(HttpUtil.isNeedSample()){
 //                    idx = Integer.valueOf(ele)%5 + 1;

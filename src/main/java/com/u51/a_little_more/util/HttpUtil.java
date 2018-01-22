@@ -3,10 +3,18 @@ package com.u51.a_little_more.util;
 import com.google.common.util.concurrent.RateLimiter;
 import com.u51.a_little_more.dataObject.FundChannel;
 import com.u51.a_little_more.cache.ChannelCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 
 /**
@@ -15,35 +23,30 @@ import java.util.Map;
  * @author alexsong
  * @version $Id: HttpUtil.java, v 0.1 2018年01月09日 下午9:49:49 alexsong Exp $
  */
+@Configuration
 public class HttpUtil {
+    private static final Logger log = LoggerFactory.getLogger(HttpUtil.class);
+
     private static Map<String, String> url = new HashMap<>();
     private static ChannelCache cache = new ChannelCache();
 
     static {
-//        url.put("C1", "http://10.6.20.67:8081/hello/c1");
-//        url.put("C2", "http://10.6.20.67:8081/hello/c2");
-//        url.put("C3", "http://10.6.20.67:8081/hello/c3");
-//        url.put("C4", "http://10.6.20.67:8081/hello/c4");
-//        url.put("C5", "http://10.6.20.67:8081/hello/c5");
-
-        url.put("C1", "http://192.168.1.4:8081/");
-        url.put("C2", "http://192.168.1.4:8082/");
-        url.put("C3", "http://192.168.1.4:8083/");
-        url.put("C4", "http://192.168.1.4:8084/");
-        url.put("C5", "http://192.168.1.4:8085/");
-
-//        url.put("C1", "http://cc.intra.yacolpay.com/c1/apply.htm?");
-//        url.put("C2", "http://cc.intra.yacolpay.com/c1/apply.htm?");
-//        url.put("C3", "http://test.hello51world.yacolpay.com/ccmchannel3/");
-//        url.put("C4", "http://test.hello51world.yacolpay.com/ccmchannel4/");
-//        url.put("C5", "http://test.hello51world.yacolpay.com/ccmchannel5/");
-
+        init();
         cache.init();
     }
+
+    public Map<String, String> getUrl() {
+        return url;
+    }
+
+    public void setUrl(Map<String, String> url) {
+        HttpUtil.url = url;
+    }
+
     //生成请求url
     public static String buildUrl(String channelNo, String reqNo, String token){
         //return "http://cc.intra.yacolpay.com/"+channelNo+"/apply.htm?reqNo="+reqNo+"&token="+token;
-        return url.get(channelNo)+"index.htm?reqNo="+reqNo+"&token="+token;
+        return url.get(channelNo)+"?reqNo="+reqNo+"&token="+token;
         //return url.get(c)+"/apply.htm?reqNo="+reqNo+"&token="+token;
     }
 
@@ -61,16 +64,16 @@ public class HttpUtil {
                     if(!state){
                         //渠道不可用时的调整
                         if("C4".equals(channel) || "C5".equals(channel)){
-                            limiterList.get("C1").setRate(limiterList.get("C1").getRate()+5.0);
-                            limiterList.get("C2").setRate(limiterList.get("C2").getRate()+2.5);
+                            limiterList.get("C1").setRate(limiterList.get("C1").getRate()+7.5);
+                            limiterList.get("C2").setRate(limiterList.get("C2").getRate()+5.0);
                             limiterList.get("C3").setRate(limiterList.get("C3").getRate()+2.5);
                         }
 
                     }else {
                         //渠道恢复时的调整
                         if("C4".equals(channel) || "C5".equals(channel)){
-                            limiterList.get("C1").setRate(limiterList.get("C1").getRate()-5.0);
-                            limiterList.get("C2").setRate(limiterList.get("C2").getRate()-2.5);
+                            limiterList.get("C1").setRate(limiterList.get("C1").getRate()-7.5);
+                            limiterList.get("C2").setRate(limiterList.get("C2").getRate()-5.0);
                             limiterList.get("C3").setRate(limiterList.get("C3").getRate()-2.5);
                         }
                     }
@@ -105,5 +108,18 @@ public class HttpUtil {
     public static void resetChannel(List<FundChannel> list){
         cache.resetChannelList(list);
         cache.remove("CHANNEL_INFO");
+    }
+
+    private static void init(){
+        try {
+            Properties prop = PropertiesLoaderUtils.loadAllProperties("file:application.properties");
+            url.put("C1",new String(prop.getProperty("c1.host").getBytes("ISO-8859-1"), "utf-8"));
+            url.put("C2",new String(prop.getProperty("c2.host").getBytes("ISO-8859-1"), "utf-8"));
+            url.put("C3",new String(prop.getProperty("c3.host").getBytes("ISO-8859-1"), "utf-8"));
+            url.put("C4",new String(prop.getProperty("c4.host").getBytes("ISO-8859-1"), "utf-8"));
+            url.put("C5",new String(prop.getProperty("c5.host").getBytes("ISO-8859-1"), "utf-8"));
+        }catch (IOException e){
+            log.error("加载服务端信息失败");
+        }
     }
 }
