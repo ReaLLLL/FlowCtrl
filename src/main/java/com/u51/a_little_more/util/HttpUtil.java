@@ -65,16 +65,16 @@ public class HttpUtil {
                         //渠道不可用时的调整
                         if("C4".equals(channel) || "C5".equals(channel)){
                             limiterList.get("C1").setRate(limiterList.get("C1").getRate()+7.5);
-                            limiterList.get("C2").setRate(limiterList.get("C2").getRate()+5.0);
-                            limiterList.get("C3").setRate(limiterList.get("C3").getRate()+2.5);
+                            //limiterList.get("C2").setRate(limiterList.get("C2").getRate()-2.5);
+                            limiterList.get("C3").setRate(limiterList.get("C3").getRate()-7.5);
                         }
 
                     }else {
                         //渠道恢复时的调整
                         if("C4".equals(channel) || "C5".equals(channel)){
                             limiterList.get("C1").setRate(limiterList.get("C1").getRate()-7.5);
-                            limiterList.get("C2").setRate(limiterList.get("C2").getRate()-5.0);
-                            limiterList.get("C3").setRate(limiterList.get("C3").getRate()-2.5);
+                            //limiterList.get("C2").setRate(limiterList.get("C2").getRate()-2.5);
+                            limiterList.get("C3").setRate(limiterList.get("C3").getRate()+7.5);
                         }
                     }
                     cache.updateChannelState(channel, state);

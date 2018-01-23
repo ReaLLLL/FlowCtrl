@@ -29,9 +29,9 @@ public class ChannelCache extends AbstractCache<String, Object>{
                 @Override
                 public int compare(FundChannel o1, FundChannel o2) {
                     if(o1.getPrior() > o2.getPrior())
-                        return 1;
-                    else
                         return -1;
+                    else
+                        return 1;
                 }
             });
 
@@ -45,15 +45,6 @@ public class ChannelCache extends AbstractCache<String, Object>{
             if(this.channelAvailableMap.get("AVAILABLE_FLAG_C4")){
                 list.add("C4");
             }
-//            if(this.channelAvailableMap.get("C1")){
-//                list.add("C1");
-//            }
-//            if(this.channelAvailableMap.get("C2")){
-//                list.add("C2");
-//            }
-//            if(this.channelAvailableMap.get("C3")){
-//                list.add("C3");
-//            }
 
             while (iter.hasNext()){
                 FundChannel f = (FundChannel)iter.next();

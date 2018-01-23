@@ -14,6 +14,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -25,6 +26,17 @@ import java.util.Random;
  */
 public class DetectiveThread implements Runnable{
     private static final Logger log = LoggerFactory.getLogger(DetectiveThread.class);
+
+    private static Map<String, Integer> intervalMap;
+
+    static {
+        intervalMap = new HashMap<>();
+        intervalMap.put("C1", 12);
+        intervalMap.put("C2", 12);
+        intervalMap.put("C3", 8);
+        intervalMap.put("C4", 4);
+        intervalMap.put("C5", 4);
+    }
 
     private HttpClientService client;
     private String channel;
@@ -42,7 +54,7 @@ public class DetectiveThread implements Runnable{
 
     @Override
     public void run() {
-        int interval = 16;
+        int interval = intervalMap.get(this.channel);
         while(true){
             try {
                 log.info("当前渠道通讯异常，渠道号：{}, 检测线程开始工作，线程号：{}, 检测间隔：{}",this.channel, Thread.currentThread().getName(), interval);
@@ -52,9 +64,9 @@ public class DetectiveThread implements Runnable{
                 OutBoundResult response = this.client.doGet(url);
 
                 if(response == null || !response.getState().equals(OutBoundStateEnum.SUCCESS))
-                    interval = interval > 5 ? interval/2 : 2;
+                    interval = interval > 2 ? interval/2 : 2;
                 else{
-                    log.info("当前渠道已恢复，渠道编号：{}", channel);
+                    log.info("当前渠道已恢复，渠道编号：{}， 请求编号：{}， 响应信息：{}", channel,this.reqNo, response.getState().getCode());
                     HttpUtil.setChannelState(this.channel, true, this.limiterList);
                     for(String s: limiterList.keySet()){
                         log.info("当前渠道编号：{}，流速：{}",s, limiterList.get(s).getRate());

@@ -26,7 +26,7 @@ public class RequestSendRunnable implements Runnable {
 
     private BlockingQueue<String> queue;
 
-    private Map<String, RateLimiter> limiterList;
+    private volatile Map<String, RateLimiter> limiterList;
 
     private ListeningExecutorService executorService;
 
@@ -64,26 +64,14 @@ public class RequestSendRunnable implements Runnable {
                 String channel = "";
                 boolean available = false;
 
-                while(true) {
-                    //获取此时最优渠道排序结果
-                    List<String> channelList = HttpUtil.getChannel();
-                    for(String c : channelList){
-                        //available = limiterList.get(c).tryAcquire(5, TimeUnit.MILLISECONDS);
-                        available = limiterList.get(c).tryAcquire();
-                        if(available){
-                            channel = c;
-                            break;
-                        }
-                    }
-                    if(available)
-                        break;
-                }
-                //===================此处为快速方案====================
 //                while(true) {
-//                    for(String s : this.limiterList.keySet()){
-//                        if(HttpUtil.isChannelAvailable(s) && this.limiterList.get(s).tryAcquire()){
-//                            available = true;
-//                            channel = s;
+//                    //获取此时最优渠道排序结果
+//                    List<String> channelList = HttpUtil.getChannel();
+//                    for(String c : channelList){
+//                        //available = limiterList.get(c).tryAcquire(5, TimeUnit.MILLISECONDS);
+//                        available = limiterList.get(c).tryAcquire();
+//                        if(available){
+//                            channel = c;
 //                            break;
 //                        }
 //                    }
@@ -92,32 +80,33 @@ public class RequestSendRunnable implements Runnable {
 //                }
 
                 //===================此处为备选方案====================
-//                int idx = 0;
-//                if(HttpUtil.isNeedSample()){
-//                    idx = Integer.valueOf(ele)%5 + 1;
-//                    channel = "C"+idx;
-//                    this.limiterList.get(channel).acquire();
-//                }else {
-//                    idx = Integer.valueOf(ele)%5 + 1;
-//                    channel = "C"+idx;
-//
-//                    while (!HttpUtil.isChannelAvailable(channel) && !this.limiterList.get(channel).tryAcquire()){
-//                        //log.info("获取可用渠道列表开始，当前线程号：{}", Thread.currentThread().getName());
-//                        List<String> list = HttpUtil.getChannel();
-//                        //log.info("获取可用渠道列表结束，当前线程号：{}", Thread.currentThread().getName());
-//                        if(list.size() == 0){
-//                            log.error("当前无可用渠道");
-//                            Thread.sleep(2000);
-//                            continue;
-//                        }
-//
-//                        if(idx > list.size()){
-//                            idx = 1;
-//                        }else {
-//                            idx = (idx+1)%5+1;
-//                        }
-//                    }
-//                }
+                int idx = 0;
+                if(HttpUtil.isNeedSample()){
+                    idx = Integer.valueOf(ele)%5 + 1;
+                    channel = "C"+idx;
+                    this.limiterList.get(channel).acquire();
+                }else {
+                    idx = Integer.valueOf(ele)%5 + 1;
+                    channel = "C"+idx;
+
+                    while(!HttpUtil.isChannelAvailable(channel) || !this.limiterList.get(channel).tryAcquire()){
+
+                        List<String> list = HttpUtil.getChannel();
+
+                        if(list.size() == 0){
+                            log.error("当前无可用渠道");
+                            Thread.sleep(2000);
+                            continue;
+                        }
+
+                        if(idx > list.size())
+                            idx = list.size()-1;
+                        else
+                            idx = Math.max(0, idx-1);
+
+                        channel = list.get(idx);
+                    }
+                }
 
                 //已获取令牌；
                 final ListenableFuture<OutBoundResult> listenableFuture = this.executorService.submit(new OutBoundCallable(channel, ele, limiterList.get(channel), this.token, this.clientService));
@@ -132,7 +121,7 @@ public class RequestSendRunnable implements Runnable {
                                 //调低优先级，降低流速
                                 log.info("当前请求超时，开始降低流速，渠道编号：{}", channel);
                                 i= result.getLimiter().getRate();
-                                result.getLimiter().setRate(i/20.0);
+                                result.getLimiter().setRate(i/21.0);
                                 break;
                             case DUPLICATE_REQUEST:
                                 log.error("当前请求重复，请求编号：{}", result.getReqNo());
@@ -166,10 +155,10 @@ public class RequestSendRunnable implements Runnable {
                                     statCount.get(channel).getAndIncrement();
                                     statTime.get(channel).addAndGet(result.getTime());
                                 }
-                                if(result.getLimiter().getRate() <2) {
+                                if(result.getLimiter().getRate() <1) {
                                     log.info("当前渠道恢复流速，渠道编号：{}", channel);
                                     i = result.getLimiter().getRate();
-                                    result.getLimiter().setRate(i*20.0);
+                                    result.getLimiter().setRate(i*21.0);
                                 }
                                 break;
                             case OTHER:
@@ -183,7 +172,6 @@ public class RequestSendRunnable implements Runnable {
                             default:
                                 break;
                         }
-
                     }
 
                     @Override

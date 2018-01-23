@@ -96,7 +96,7 @@ public class MainProcess implements InitializingBean {
         Map<String, RateLimiter> rateMap = new HashMap<>();
         Map<String, AtomicInteger> statCount = new HashMap<>();
         Map<String, AtomicLong> statTime = new HashMap<>();
-        CountDownLatch count = new CountDownLatch(3000);
+        CountDownLatch count = new CountDownLatch(4000);
 
         for(int i = 1; i < 6; i++){
 
@@ -139,7 +139,7 @@ public class MainProcess implements InitializingBean {
 
         rateMap.get("C1").setRate(5.0);
         rateMap.get("C2").setRate(10.0);
-        rateMap.get("C3").setRate(15.0);
+        rateMap.get("C3").setRate(16.0);
         rateMap.get("C4").setRate(20.0);
         rateMap.get("C5").setRate(20.0);
 

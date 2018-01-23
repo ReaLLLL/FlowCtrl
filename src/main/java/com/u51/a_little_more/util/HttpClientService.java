@@ -51,7 +51,6 @@ public class HttpClientService {
     }
 
     public OutBoundResult doGet(String url) {
-        log.info("请求URL：{}",url);
         HttpGet httpGet = new HttpGet(url);
         httpGet.setConfig(this.requestConfig);
 
@@ -84,12 +83,11 @@ public class HttpClientService {
                         result.setState(OutBoundStateEnum.UNKNOWN);
                         break;
                 }
-
-                return result;
             }
         }
         catch(IOException ioe){
             log.error("服务端通信异常", ioe);
+            result.setState(OutBoundStateEnum.UNKNOWN);
         } finally {
             if (response != null) {
                 try {
@@ -98,8 +96,8 @@ public class HttpClientService {
                     log.error("关闭连接异常", e);
                 }
             }
+            return result;
         }
-        return null;
     }
 
     public OutBoundResult doGetForTest(String url){

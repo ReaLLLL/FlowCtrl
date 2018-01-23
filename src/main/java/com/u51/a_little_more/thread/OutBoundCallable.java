@@ -5,6 +5,8 @@ import com.u51.a_little_more.dataObject.OutBoundResult;
 import com.u51.a_little_more.dataObject.OutBoundStateEnum;
 import com.u51.a_little_more.util.HttpClientService;
 import com.u51.a_little_more.util.HttpUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Callable;
 
@@ -15,6 +17,8 @@ import java.util.concurrent.Callable;
  * @version $Id: OutBoundCallable.java, v 0.1 2018年01月09日 下午11:54:54 alexsong Exp $
  */
 public class OutBoundCallable implements Callable<OutBoundResult> {
+    private static final Logger log = LoggerFactory.getLogger(OutBoundCallable.class);
+
     private String channel;
 
     private String reqNo;
@@ -52,6 +56,8 @@ public class OutBoundCallable implements Callable<OutBoundResult> {
             else {
                 if(result.getState().equals(OutBoundStateEnum.SUCCESS))
                     result.setTime(end-start);
+
+                log.info("请求编号：{}, 响应信息：{}", this.reqNo, result.getState().getCode());
             }
         }
         result.setReqNo(this.reqNo);

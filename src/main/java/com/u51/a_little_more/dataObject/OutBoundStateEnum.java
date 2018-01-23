@@ -13,13 +13,29 @@ public enum OutBoundStateEnum {
     SERVICE_REJECT(403,"服务限流"),
     SERVICE_BUSY(500,"系统繁忙"),
     UNKNOWN(502,"其他失败"),
-    OTHER(502,"本地失败");
+    OTHER(503,"本地失败");
 
     private Integer code;
     private String desc;
 
     OutBoundStateEnum(Integer code, String desc) {
         this.code = code;
+        this.desc = desc;
+    }
+
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
         this.desc = desc;
     }
 }
