@@ -155,9 +155,9 @@ public class RequestSendRunnable implements Runnable {
                                     statCount.get(channel).getAndIncrement();
                                     statTime.get(channel).addAndGet(result.getTime());
                                 }
-                                if(result.getLimiter().getRate() <1) {
+                                i = result.getLimiter().getRate();
+                                if(i < 1) {
                                     log.info("当前渠道恢复流速，渠道编号：{}", channel);
-                                    i = result.getLimiter().getRate();
                                     result.getLimiter().setRate(i*21.0);
                                 }
                                 break;
